@@ -83,6 +83,7 @@ input{min-width:170px}
         <button id="deleteUserBtn" class="warn">削除</button>
       </div>
       <div id="currentUserText" class="usercurrent">現在のユーザー：未選択</div>
+      <div id="compatText" class="usercurrent">スマホ互換モード：準備完了</div>
       <div class="notice">※ GitHub Pages は静的サイトのため、ここでのユーザー登録は<strong>この端末のブラウザ内だけ</strong>に保存されます（パスワードなし）。</div>
     </section>
 
@@ -110,7 +111,7 @@ input{min-width:170px}
       <div class="stat"><div class="label">登録中の間違い問題</div><div class="value" id="savedWrongBank">0</div></div>
     </div>
     <div class="progress"><div class="bar" id="progressBar"></div></div>
-    <div class="inline-link"><a href="image-study.html">元の画像学習版を見る</a></div>
+    
   </div>
 
   <section id="quizCard" class="card hidden">
@@ -143,7 +144,7 @@ input{min-width:170px}
     <div id="wrongArea" class="notice"></div>
   </section>
 
-  <div id="emptyBox" class="empty">まずは上の「ユーザー管理」でユーザー名を登録または選択してください。</div>
+  <div id="emptyBox" class="empty">スマホではPCのユーザー登録は引き継がれません。上の「ユーザー管理」で、このスマホ用のユーザー名を登録してから問題をスタートしてください。</div>
   <div class="notice">使い方：ユーザー登録 → 単元を選ぶ → スタート → 選択肢をタップ。<br>間違えた問題は自動でそのユーザーの「間違い問題」として登録され、正解すると登録から外れます。</div>
 </div>
 
@@ -173,17 +174,21 @@ let currentLabel = '';
 const $ = id => document.getElementById(id);
 function loadStore(){
   try {
-    const obj = JSON.parse(localStorage.getItem(APP_KEY) || 'null');
-    if (!obj || typeof obj !== 'object') return structuredClone(DEFAULT_STORE);
+    var raw = localStorage.getItem(APP_KEY);
+    var obj = raw ? JSON.parse(raw) : null;
+    if (!obj || typeof obj !== 'object') return JSON.parse(JSON.stringify(DEFAULT_STORE));
     obj.users = Array.isArray(obj.users) ? obj.users : [];
     obj.currentUser = obj.currentUser || '';
     obj.profiles = obj.profiles && typeof obj.profiles === 'object' ? obj.profiles : {};
     return obj;
   } catch(e){
-    return structuredClone(DEFAULT_STORE);
+    return JSON.parse(JSON.stringify(DEFAULT_STORE));
   }
 }
-function saveStore(){ localStorage.setItem(APP_KEY, JSON.stringify(store)); }
+function saveStore(){
+  try { localStorage.setItem(APP_KEY, JSON.stringify(store)); }
+  catch(e) { console.warn('保存できませんでした', e); }
+}
 function ensureProfile(name){
   if (!store.profiles[name]) {
     store.profiles[name] = { correct:0, sessions:0, history:[], wrongBank:[], solved:{} };
@@ -427,9 +432,15 @@ $('nextBtn').addEventListener('click', nextQuestion);
 $('shuffleBtn').addEventListener('click', () => startSession('random'));
 $('lessonSelect').addEventListener('change', () => { buildBaseSet(false); });
 $('newUserName').addEventListener('keydown', e => { if (e.key === 'Enter') addUser(); });
-refreshUsersUI();
-buildBaseSet(false);
-updateNavButtons();
+try {
+  refreshUsersUI();
+  buildBaseSet(false);
+  updateNavButtons();
+} catch(e) {
+  var c = document.getElementById('compatText');
+  if (c) c.textContent = '初期化エラー：ページを再読み込みしてください';
+  console.error(e);
+}
 </script>
 </body>
 </html>
