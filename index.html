@@ -57,19 +57,37 @@ input{min-width:170px}
 .userbox{display:grid;grid-template-columns:1.1fr 1fr auto auto auto;gap:8px;align-items:center}
 .usercurrent{font-size:13px;color:var(--muted);margin-top:8px}
 .empty{padding:16px;border:1px dashed var(--line);border-radius:14px;background:#fafafa;color:var(--muted);line-height:1.7}
+details.settings{margin-top:10px}
+details.settings > summary{
+  list-style:none; cursor:pointer; min-height:44px; display:flex; align-items:center;
+  justify-content:space-between; gap:8px; border:1px solid var(--line); border-radius:12px;
+  background:#fff; padding:9px 12px; font-weight:700;
+}
+details.settings > summary::-webkit-details-marker{display:none}
+.compact-userbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.compact-chip{font-size:12px;border:1px solid var(--line);border-radius:999px;background:#fff;padding:5px 9px}
+.mobile-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.mobile-actions button,.mobile-actions select{min-height:40px;padding:6px 10px}
 @media (max-width:700px){
-  .header{position:static;backdrop-filter:none}
-  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .header{position:static;backdrop-filter:none;padding-bottom:4px}
+  h1{font-size:18px}
+  .sub{display:none}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .stat{padding:7px 8px}
+  .stat .label{font-size:11px}
+  .stat .value{font-size:15px}
   .userbox{grid-template-columns:1fr 1fr}
   .userbox input,.userbox select{width:100%;min-width:0}
   .question{font-size:18px}
+  .card{margin-top:8px;padding:13px}
 }
 @media (max-width:420px) {
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .stat{padding:8px 10px}
-  .stat .value{font-size:16px}
   .row{gap:6px}
-  select,button,input{min-height:46px}
+  select,button,input{min-height:42px}
+  .mobile-actions{display:grid;grid-template-columns:1fr 1fr}
+  .mobile-actions select{grid-column:1/-1;width:100%}
+  .navinner{grid-template-columns:.8fr 1.4fr .8fr}
 }
 </style>
 </head>
@@ -77,46 +95,26 @@ input{min-width:170px}
 <div class="app" id="app">
   <div class="header">
     <h1>英語スマホ問題集　第1回〜第8回</h1>
-    <div class="sub">タップで解答 → その場で○× → 日本語解説。<br>さらに<strong>ユーザー登録・間違えた問題の登録・間違い問題だけの再学習</strong>に対応しました。</div>
+    <div class="sub">タップで解答 → ○× → 解説 → 間違いだけ復習</div>
 
-    <section class="card" style="margin-top:10px">
-      <div class="badge">ユーザー管理</div>
-      <div class="row userbox">
-        <input id="newUserName" type="text" placeholder="ユーザー名を入力">
-        <select id="userSelect"><option value="">登録済みユーザーを選ぶ</option></select>
-        <button id="addUserBtn" class="primary">登録</button>
-        <button id="switchUserBtn" class="secondary">切替</button>
-        <button id="deleteUserBtn" class="warn">削除</button>
-      </div>
-      <div id="currentUserText" class="usercurrent">現在のユーザー：未選択</div>
-      <div id="compatText" class="usercurrent">スマホ互換モード：準備完了</div>
-      <div class="notice">※ GitHub Pages は静的サイトのため、ここでのユーザー登録は<strong>この端末のブラウザ内だけ</strong>に保存されます（パスワードなし）。</div>
-    </section>
-
-    <div class="row">
-      <select id="lessonSelect">
-        <option value="all">全80問（1〜8回まとめ）</option>
-        <option value="1">第1回 短文①</option>
-        <option value="2">第2回 短文②</option>
-        <option value="3">第3回 短文③</option>
-        <option value="4">第4回 短文④</option>
-        <option value="5">第5回 会話①</option>
-        <option value="6">第6回 会話②</option>
-        <option value="7">第7回 会話③</option>
-        <option value="8">第8回 会話④</option>
-      </select>
-      <button id="startNormal" class="primary">通常スタート</button>
-      <button id="startRandom" class="secondary">ランダム10問</button>
-      <button id="startWrongBank" class="warn">登録した間違い問題だけ</button>
-      <button id="jumpQuizBtn" class="secondary">問題へ移動</button>
+    <div class="compact-userbar">
+      <span class="compact-chip">ユーザー：<strong id="miniUser">未選択</strong></span>
+      <span class="compact-chip">間違い：<strong id="miniWrong">0</strong>問</span>
     </div>
 
-    <div class="stats">
-      <div class="stat"><div class="label">今回の対象</div><div class="value" id="targetCount">80問</div></div>
-      <div class="stat"><div class="label">累計正解数</div><div class="value" id="savedCorrect">0</div></div>
-      <div class="stat"><div class="label">学習回数</div><div class="value" id="savedSessions">0</div></div>
-      <div class="stat"><div class="label">登録中の間違い問題</div><div class="value" id="savedWrongBank">0</div></div>
-    </div>
+    <details id="settingsPanel" class="settings">
+      <summary><span>⚙ 設定・成績</span><span class="small">開く</span></summary>
+      <section class="card" style="margin-top:8px">
+        <div class="badge">ユーザー管理</div>
+        <div class="row userbox">
+          <input id="newUserName" type="text" placeholder="ユーザー名">
+          <select id="userSelect"><option value="">登録済みユーザー</option></select>
+          <button id="addUserBtn" class="primary">登録</button>
+          <button id="switchUserBtn" class="secondary">切替</button>
+          <button id="deleteUserBtn" class="warn">削除</button>
+        </div>
+        <div id="currentUserText" class="usercurrent">現在のユーザー：未選択</div>
+        <div id="compatText" class="usercurrent">スマホ互換モード：準備完了</div>
     <div class="progress"><div class="bar" id="progressBar"></div></div>
     
   </div>
@@ -151,8 +149,8 @@ input{min-width:170px}
     <div id="wrongArea" class="notice"></div>
   </section>
 
-  <div id="emptyBox" class="empty">スマホではPCのユーザー登録は引き継がれません。上の「ユーザー管理」で、このスマホ用のユーザー名を登録してから問題をスタートしてください。</div>
-  <div class="notice"><strong>スマホ：</strong>ユーザー登録 → 単元を選ぶ → 「通常スタート」を押すと、自動で問題の位置まで移動します。<br>選択肢をタップして回答すると「次へ」が押せるようになります。間違えた問題は自動登録され、正解すると登録から外れます。</div>
+  <div id="emptyBox" class="empty">最初だけ「設定・成績」を開いてユーザー名を登録してください。登録後は自動で閉じます。</div>
+  <div class="notice"><strong>スマホ：</strong>ユーザー登録 → 単元を選ぶ → 「スタート」を押すと、自動で問題の位置まで移動します。<br>選択肢をタップして回答すると「次へ」が押せるようになります。間違えた問題は自動登録され、正解すると登録から外れます。</div>
 </div>
 
 <div class="nav">
@@ -217,15 +215,19 @@ function refreshUsersUI(){
     sel.appendChild(o);
   });
   $('currentUserText').textContent = '現在のユーザー：' + (store.currentUser || '未選択');
+  $('miniUser').textContent = store.currentUser || '未選択';
   const hasUser = !!store.currentUser;
   $('emptyBox').classList.toggle('hidden', hasUser);
   updateSavedStats();
+  if (!hasUser) $('settingsPanel').open = true;
 }
 function updateSavedStats(){
   const prof = currentProfile();
   $('savedCorrect').textContent = prof ? (prof.correct || 0) : 0;
   $('savedSessions').textContent = prof ? (prof.sessions || 0) : 0;
-  $('savedWrongBank').textContent = prof ? (prof.wrongBank || []).length : 0;
+  const wrongCount = prof ? (prof.wrongBank || []).length : 0;
+  $('savedWrongBank').textContent = wrongCount;
+  $('miniWrong').textContent = wrongCount;
 }
 function setCurrentUser(name){
   if (!name) return;
@@ -240,11 +242,13 @@ function addUser(){
   if (!store.users.includes(name)) store.users.push(name);
   setCurrentUser(name);
   $('newUserName').value = '';
+  $('settingsPanel').open = false;
 }
 function switchUser(){
   const name = $('userSelect').value;
   if (!name) { alert('切り替えるユーザーを選んでください。'); return; }
   setCurrentUser(name);
+  $('settingsPanel').open = false;
 }
 function deleteUser(){
   const name = $('userSelect').value || currentUser();
@@ -301,6 +305,7 @@ function startSession(mode){
     return;
   }
   currentMode = mode;
+  $('settingsPanel').open = false;
   currentSet = mode === 'random' ? shuffle(baseSet).slice(0, Math.min(10, baseSet.length)) : [...baseSet];
   currentIndex = 0;
   answered = false;
@@ -444,7 +449,7 @@ $('jumpQuizBtn').addEventListener('click', function(){
   if (card && !card.classList.contains('hidden')) {
     card.scrollIntoView({behavior:'smooth', block:'start'});
   } else {
-    alert('先に「通常スタート」または「ランダム10問」を押してください。');
+    alert('先に「スタート」または「ランダム10問」を押してください。');
   }
 });
 $('retryWrong').addEventListener('click', startRetryWrong);
