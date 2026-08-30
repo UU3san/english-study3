@@ -58,12 +58,18 @@ input{min-width:170px}
 .usercurrent{font-size:13px;color:var(--muted);margin-top:8px}
 .empty{padding:16px;border:1px dashed var(--line);border-radius:14px;background:#fafafa;color:var(--muted);line-height:1.7}
 @media (max-width:700px){
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .userbox{grid-template-columns:1fr 1fr;}
+  .header{position:static;backdrop-filter:none}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .userbox{grid-template-columns:1fr 1fr}
+  .userbox input,.userbox select{width:100%;min-width:0}
+  .question{font-size:18px}
 }
 @media (max-width:420px) {
-  .stats{grid-template-columns:1fr}
-  .question{font-size:18px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat{padding:8px 10px}
+  .stat .value{font-size:16px}
+  .row{gap:6px}
+  select,button,input{min-height:46px}
 }
 </style>
 </head>
@@ -102,6 +108,7 @@ input{min-width:170px}
       <button id="startNormal" class="primary">通常スタート</button>
       <button id="startRandom" class="secondary">ランダム10問</button>
       <button id="startWrongBank" class="warn">登録した間違い問題だけ</button>
+      <button id="jumpQuizBtn" class="secondary">問題へ移動</button>
     </div>
 
     <div class="stats">
@@ -145,7 +152,7 @@ input{min-width:170px}
   </section>
 
   <div id="emptyBox" class="empty">スマホではPCのユーザー登録は引き継がれません。上の「ユーザー管理」で、このスマホ用のユーザー名を登録してから問題をスタートしてください。</div>
-  <div class="notice">使い方：ユーザー登録 → 単元を選ぶ → スタート → 選択肢をタップ。<br>間違えた問題は自動でそのユーザーの「間違い問題」として登録され、正解すると登録から外れます。</div>
+  <div class="notice"><strong>スマホ：</strong>ユーザー登録 → 単元を選ぶ → 「通常スタート」を押すと、自動で問題の位置まで移動します。<br>選択肢をタップして回答すると「次へ」が押せるようになります。間違えた問題は自動登録され、正解すると登録から外れます。</div>
 </div>
 
 <div class="nav">
@@ -302,6 +309,10 @@ function startSession(mode){
   $('resultCard').classList.remove('show');
   $('quizCard').classList.remove('hidden');
   renderQuestion();
+  setTimeout(function(){
+    var card = document.getElementById('quizCard');
+    if (card && card.scrollIntoView) card.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 50);
 }
 function startRetryWrong(){
   if (!sessionWrong.length) return;
@@ -315,6 +326,10 @@ function startRetryWrong(){
   $('resultCard').classList.remove('show');
   $('quizCard').classList.remove('hidden');
   renderQuestion();
+  setTimeout(function(){
+    var card = document.getElementById('quizCard');
+    if (card && card.scrollIntoView) card.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 50);
 }
 function renderQuestion(){
   const item = currentSet[currentIndex];
@@ -424,6 +439,14 @@ $('deleteUserBtn').addEventListener('click', deleteUser);
 $('startNormal').addEventListener('click', () => startSession('normal'));
 $('startRandom').addEventListener('click', () => startSession('random'));
 $('startWrongBank').addEventListener('click', () => startSession('wrongbank'));
+$('jumpQuizBtn').addEventListener('click', function(){
+  var card = document.getElementById('quizCard');
+  if (card && !card.classList.contains('hidden')) {
+    card.scrollIntoView({behavior:'smooth', block:'start'});
+  } else {
+    alert('先に「通常スタート」または「ランダム10問」を押してください。');
+  }
+});
 $('retryWrong').addEventListener('click', startRetryWrong);
 $('restartSame').addEventListener('click', () => startSession(currentMode === 'random' ? 'random' : (currentMode === 'wrongbank' ? 'wrongbank' : 'normal')));
 $('goWrongBank').addEventListener('click', () => startSession('wrongbank'));
