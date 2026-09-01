@@ -42,9 +42,26 @@ summary::-webkit-details-marker{display:none}
 .qsub{font-size:13px;color:var(--muted);margin-top:5px}
 .question{font-size:19px;line-height:1.7;white-space:pre-line;margin-top:13px}
 .choices{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}
-.choice{text-align:left;min-height:54px;line-height:1.5;padding:11px 13px}
+.choicewrap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:stretch}
+.choice{text-align:left;min-height:54px;line-height:1.5;padding:11px 13px;width:100%}
 .choice.correct{background:#f0fdf4;border-color:#86efac}
 .choice.wrong{background:#fef2f2;border-color:#fca5a5}
+.aiword{
+  display:flex;align-items:center;justify-content:center;text-decoration:none;
+  min-height:44px;border:1px solid #c7d7ff;border-radius:11px;
+  background:#f5f8ff;color:#1d4ed8;font-size:12px;font-weight:700;
+  padding:6px 9px;white-space:nowrap
+}
+.aiword:hover{background:#eaf1ff}
+.aiactions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.aibtn{
+  display:inline-flex;align-items:center;justify-content:center;text-decoration:none;
+  min-height:44px;border:1px solid #c7d7ff;border-radius:11px;
+  background:#eef4ff;color:#1d4ed8;font-weight:700;padding:8px 12px
+}
+.detailbox{margin-top:10px;padding:10px;border-radius:10px;background:#fff;border:1px solid var(--line)}
+.detailbox strong{display:block;margin-bottom:4px}
+.detailbox ul{margin:6px 0 0;padding-left:20px;line-height:1.7}
 .feedback{display:none;margin-top:13px;border:1px solid var(--line);border-radius:12px;padding:12px}
 .feedback.show{display:block}
 .feedback.ok{background:#f0fdf4;border-color:#86efac}
@@ -70,6 +87,8 @@ summary::-webkit-details-marker{display:none}
   .userrow input,.userrow select{width:100%;min-width:0}
   .stats{grid-template-columns:1fr 1fr}
   .choices{grid-template-columns:1fr}
+  .choicewrap{grid-template-columns:1fr}
+  .aiword{min-height:38px}
   .question{font-size:18px}
   .card{padding:13px}
 }
@@ -79,7 +98,7 @@ summary::-webkit-details-marker{display:none}
 <div class="app">
   <div class="topbar">
     <div class="titleline">
-      <h1>英語問題集　第1回〜第8回</h1>
+      <h1>英語問題集　第1回〜第8回 <span style="font-size:11px;color:#66727d">AI質問対応</span></h1>
       <div class="chips">
         <span class="chip">ユーザー：<strong id="miniUser">学習者1</strong></span>
         <span class="chip">間違い：<strong id="miniWrong">0</strong>問</span>
@@ -155,7 +174,10 @@ summary::-webkit-details-marker{display:none}
     <div id="wrongList" class="help"></div>
   </section>
 
-  <div class="help">選択肢を押すと○×と解説が表示され、その後「次へ」が押せます。間違えた問題は自動登録され、再テストで正解すると登録から外れます。</div>
+  <div class="help">
+    選択肢の意味が分からないときは「AIで意味」を押してください。正解を教えず、意味・品詞・例文だけをChatGPTに質問します。<br>
+    回答後は「AIで詳しく解説」から、なぜ正解なのか・他の選択肢がなぜ違うのか・全文訳・覚え方まで質問できます。間違えた問題は自動登録されます。
+  </div>
 </div>
 
 <div id="bottomNav" class="bottomnav active">
@@ -181,6 +203,71 @@ let currentMode = 'normal';
 let lastBaseMode = 'normal';
 
 const $ = id => document.getElementById(id);
+
+function chatGPTUrl(promptText){
+  return 'https://chatgpt.com/?q=' + encodeURIComponent(promptText);
+}
+function meaningPrompt(item, choice){
+  return [
+    '私は中学生の英語を勉強しています。',
+    '次の英単語・語句の意味を日本語で分かりやすく教えてください。',
+    '',
+    '語句：' + choice,
+    '問題文：' + item.q,
+    '',
+    '次の順で説明してください。',
+    '1. この語句の意味',
+    '2. 品詞',
+    '3. この問題文の中ではどんな意味になりそうか',
+    '4. 中学生向けの短い例文を1つ（日本語訳つき）',
+    '5. 覚えやすい覚え方があれば一言',
+    '',
+    '重要：この問題の正解が何番かは教えないでください。'
+  ].join('\n');
+}
+function detailPrompt(item, selectedIndex){
+  return [
+    '私は中学生の英語を勉強しています。次の4択問題を、先生のように丁寧に解説してください。',
+    '',
+    '問題：',
+    item.q,
+    '',
+    '選択肢：',
+    item.c.map((c,i)=>(i+1)+'. '+c).join('\n'),
+    '',
+    '私が選んだ答え：' + (selectedIndex+1) + '. ' + item.c[selectedIndex],
+    '正解：' + (item.a+1) + '. ' + item.c[item.a],
+    '',
+    '次の順で説明してください。',
+    '1. 全文の自然な日本語訳',
+    '2. なぜ正解の選択肢になるのか（文法・熟語・文脈）',
+    '3. 正解の単語・語句の意味と使い方',
+    '4. 他の3つの選択肢の意味',
+    '5. 他の3つがこの問題ではなぜ不正解なのかを1つずつ',
+    '6. 入試での見分け方・覚え方',
+    '7. 似た問題を1問だけ作り、最後に答えも示す',
+    '',
+    '中学生が理解できる日本語で、難しい文法用語には短い説明を添えてください。'
+  ].join('\n');
+}
+function localDetailedExplanation(item){
+  const others=item.c
+    .map((c,i)=>({c,i}))
+    .filter(x=>x.i!==item.a)
+    .map(x=>'<li><strong>'+ (x.i+1)+'. '+escapeHtml(x.c) +'</strong>：この問題では文法または文脈が合いません。AI詳説では、意味と不正解の理由を個別に確認できます。</li>')
+    .join('');
+  return '<div class="detailbox">' +
+    '<strong>この問題のポイント</strong>' +
+    '<div>'+escapeHtml(item.e)+'</div>' +
+    '<strong style="margin-top:9px">他の選択肢について</strong>' +
+    '<ul>'+others+'</ul>' +
+    '</div>';
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
 
 function blankProfile(){
   return {correct:0,sessions:0,history:[],wrongBank:[],solved:{}};
@@ -289,11 +376,25 @@ function render(){
   $('progressBar').style.width=((currentIndex)/currentSet.length*100)+'%';
   const box=$('choices');box.innerHTML='';
   item.c.forEach((c,i)=>{
+    const wrap=document.createElement('div');
+    wrap.className='choicewrap';
+
     const b=document.createElement('button');
     b.type='button';b.className='choice';
-    b.innerHTML=`<strong>${i+1}.</strong> ${c}`;
+    b.innerHTML=`<strong>${i+1}.</strong> ${escapeHtml(c)}`;
     b.addEventListener('click',()=>answer(i));
-    box.appendChild(b);
+
+    const ai=document.createElement('a');
+    ai.className='aiword';
+    ai.target='_blank';
+    ai.rel='noopener noreferrer';
+    ai.href=chatGPTUrl(meaningPrompt(item,c));
+    ai.textContent='AIで意味';
+    ai.setAttribute('aria-label', c+' の意味をAIに聞く');
+
+    wrap.appendChild(b);
+    wrap.appendChild(ai);
+    box.appendChild(wrap);
   });
   answered=false;
   $('feedback').className='feedback';
@@ -308,7 +409,7 @@ function answer(idx){
   const p=profile();
   if(!p.solved[item.qid])p.solved[item.qid]={correct:0,wrong:0};
   const ok=idx===item.a;
-  [...$('choices').children].forEach((b,i)=>{
+  [...$('choices').querySelectorAll('.choice')].forEach((b,i)=>{
     b.disabled=true;
     if(i===item.a)b.classList.add('correct');
     if(i===idx&&!ok)b.classList.add('wrong');
@@ -327,7 +428,13 @@ function answer(idx){
     $('feedback').classList.add('show','ng');
     $('fbTitle').textContent='× ちがいます';
   }
-  $('fbBody').textContent=`正解：${item.a+1}. ${item.c[item.a]}\n解説：${item.e}`;
+  $('fbBody').innerHTML =
+    '<strong>正解：</strong> '+(item.a+1)+'. '+escapeHtml(item.c[item.a])+
+    '<br><strong>基本解説：</strong> '+escapeHtml(item.e)+
+    localDetailedExplanation(item)+
+    '<div class="aiactions">'+
+      '<a class="aibtn" target="_blank" rel="noopener noreferrer" href="'+chatGPTUrl(detailPrompt(item,idx))+'">🤖 AIでさらに詳しく解説</a>'+
+    '</div>';
   saveStore();updateStats();updateNav();
 }
 function updateNav(){
