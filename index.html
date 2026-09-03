@@ -114,7 +114,7 @@ summary::-webkit-details-marker{display:none}
 <div class="app">
   <div class="topbar">
     <div class="titleline">
-      <h1>英語問題集　第1回〜第8回 <span style="font-size:11px;color:#66727d">AI質問対応</span></h1>
+      <h1>英語問題集　第1回〜第8回 <span style="font-size:11px;color:#66727d">あかり式AI</span></h1>
       <div class="chips">
         <span class="chip">ユーザー：<strong id="miniUser">学習者1</strong></span>
         <span class="chip">間違い：<strong id="miniWrong">0</strong>問</span>
@@ -191,7 +191,7 @@ summary::-webkit-details-marker{display:none}
   </section>
 
   <div class="help">
-    選択肢の意味が分からないときは「AIで意味」を押してください。正解を教えず、意味・品詞・例文だけをChatGPTに質問します。<br>
+    選択肢の意味が分からないときは「🤖 AIに聞く」を押してください。正解を教えず、意味・品詞・例文だけをChatGPTに質問します。<br>
     回答後は「AIで詳しく解説」から、なぜ正解なのか・他の選択肢がなぜ違うのか・全文訳・覚え方まで質問できます。間違えた問題は自動登録されます。
   </div>
 </div>
@@ -220,50 +220,38 @@ let lastBaseMode = 'normal';
 
 const $ = id => document.getElementById(id);
 
-function chatGPTUrl(promptText){
-  return 'https://chatgpt.com/?q=' + encodeURIComponent(promptText);
+function aiLookupUrl(promptText){
+  return 'https://www.perplexity.ai/search/?q=' + encodeURIComponent(promptText);
 }
 function meaningPrompt(item, choice){
   return [
-    '私は中学生の英語を勉強しています。',
-    '次の英単語・語句の意味を日本語で分かりやすく教えてください。',
+    '中学生の英語の問題です。',
     '',
-    '語句：' + choice,
-    '問題文：' + item.q,
+    '問題：' + item.q,
+    '調べたい語句：' + choice,
     '',
-    '次の順で説明してください。',
-    '1. この語句の意味',
-    '2. 品詞',
-    '3. この問題文の中ではどんな意味になりそうか',
-    '4. 中学生向けの短い例文を1つ（日本語訳つき）',
-    '5. 覚えやすい覚え方があれば一言',
+    'この語句について、中学生に塾講師が教えるように分かりやすく説明してください。',
+    '意味、品詞、この問題文の中での意味、短い例文、覚え方を教えてください。',
     '',
-    '重要：この問題の正解が何番かは教えないでください。'
+    '重要：まだ問題を解いている途中なので、正解が何番か・この語句が正解かどうかは教えないでください。'
   ].join('\n');
 }
 function detailPrompt(item, selectedIndex){
   return [
-    '私は中学生の英語を勉強しています。次の4択問題を、先生のように丁寧に解説してください。',
+    '中学生の英語の4択問題です。',
     '',
-    '問題：',
-    item.q,
+    '問題：' + item.q,
     '',
     '選択肢：',
     item.c.map((c,i)=>(i+1)+'. '+c).join('\n'),
     '',
-    '私が選んだ答え：' + (selectedIndex+1) + '. ' + item.c[selectedIndex],
+    '自分が選んだ答え：' + (selectedIndex+1) + '. ' + item.c[selectedIndex],
     '正解：' + (item.a+1) + '. ' + item.c[item.a],
     '',
-    '次の順で説明してください。',
-    '1. 全文の自然な日本語訳',
-    '2. なぜ正解の選択肢になるのか（文法・熟語・文脈）',
-    '3. 正解の単語・語句の意味と使い方',
-    '4. 他の3つの選択肢の意味',
-    '5. 他の3つがこの問題ではなぜ不正解なのかを1つずつ',
-    '6. 入試での見分け方・覚え方',
-    '7. 似た問題を1問だけ作り、最後に答えも示す',
-    '',
-    '中学生が理解できる日本語で、難しい文法用語には短い説明を添えてください。'
+    'この答えになる理由を、中学生に塾講師が教えるように分かりやすく説明してください。',
+    '特に、問題文のどの語句が「決め手」になるのかを最初に示してください。',
+    'そのあと、全文の日本語訳、文法・熟語、正解の語句の意味、他の選択肢がなぜ違うか、入試での見分け方・覚え方も教えてください。',
+    '説明は長くなりすぎず、重要なところをはっきり分けてください。'
   ].join('\n');
 }
 function localDetailedExplanation(item){
@@ -404,8 +392,8 @@ function render(){
     ai.className='aiword';
     ai.target='_blank';
     ai.rel='noopener noreferrer';
-    ai.href=chatGPTUrl(meaningPrompt(item,c));
-    ai.textContent='AIで意味';
+    ai.href=aiLookupUrl(meaningPrompt(item,c));
+    ai.textContent='🤖 AIに聞く';
     ai.setAttribute('aria-label', c+' の意味をAIに聞く');
 
     wrap.appendChild(b);
@@ -449,7 +437,7 @@ function answer(idx){
     '<br><strong>基本解説：</strong> '+escapeHtml(item.e)+
     localDetailedExplanation(item)+
     '<div class="aiactions">'+
-      '<a class="aibtn" target="_blank" rel="noopener noreferrer" href="'+chatGPTUrl(detailPrompt(item,idx))+'">🤖 AIでさらに詳しく解説</a>'+
+      '<a class="aibtn" target="_blank" rel="noopener noreferrer" href="'+aiLookupUrl(detailPrompt(item,idx))+'">🤖 🤖 AIに詳しく聞く</a>'+
     '</div>';
   saveStore();updateStats();updateNav();
 }
