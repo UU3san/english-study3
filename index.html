@@ -377,6 +377,7 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
     <div class="toolactions">
       <button id="reorderUndoBtn">1つ戻す</button>
       <button id="reorderResetBtn">リセット</button>
+      <button id="reorderShuffleBtn">🔀 シャッフル</button>
       <button id="reorderCheckBtn" class="primary">答え合わせ</button>
       <button id="reorderNextBtn">次へ →</button>
       <a id="reorderAiBtn" href="#" target="_blank" rel="noopener noreferrer">🤖 AIに解説を聞く</a>
@@ -965,8 +966,22 @@ function updateStudyTypeUI(){
 }
 
 
-let reorderIndex=0, reorderChosen=[];
+let reorderIndex=0, reorderChosen=[], reorderDisplayTokens=[];
 function reorderData(){ return CURRENT_LEVEL==='4'?REORDER_G4:REORDER_G3; }
+
+function shuffledReorderTokens(item){
+  const arr=item.tokens.map((word,i)=>({word,i}));
+  for(let k=arr.length-1;k>0;k--){
+    const j=Math.floor(Math.random()*(k+1));
+    [arr[k],arr[j]]=[arr[j],arr[k]];
+  }
+  const words=arr.map(x=>x.word);
+  if(JSON.stringify(words)===JSON.stringify(item.order) && arr.length>1){
+    [arr[0],arr[1]]=[arr[1],arr[0]];
+  }
+  return arr;
+}
+
 function readingData(){ return CURRENT_LEVEL==='4'?READING_G4:READING_G3; }
 function listeningData(){ return CURRENT_LEVEL==='4'?LISTENING_G4:LISTENING_G3; }
 
@@ -1000,6 +1015,7 @@ function renderReorder(){
   if(reorderIndex>=data.length)reorderIndex=0;
   const item=data[reorderIndex];
   reorderChosen=[];
+  reorderDisplayTokens=shuffledReorderTokens(item);
   $('reorderCounter').textContent=`${reorderIndex+1} / ${data.length}`;
   $('reorderSource').textContent=CURRENT_LEVEL==='4'?'4級教材 第9〜12回':'追加練習（教材外）';
   $('reorderJapanese').textContent=item.jp;
@@ -1010,23 +1026,31 @@ function renderReorder(){
 }
 function renderReorderTokens(){
   const item=reorderData()[reorderIndex];
-  const answer=$('reorderAnswer');
-  const chosenWords=reorderChosen.map(i=>item.tokens[i]);
+  const chosenWords=reorderChosen.map(displayIndex=>reorderDisplayTokens[displayIndex].word);
   const assembled=[item.prefix,...chosenWords,item.suffix].filter(Boolean).join(' ');
-  answer.textContent=assembled || '語句を順番にタップしてください';
-  const box=$('reorderTokens'); box.innerHTML='';
-  item.tokens.forEach((word,i)=>{
+  $('reorderAnswer').textContent=assembled || '語句を順番にタップしてください';
+
+  const box=$('reorderTokens');
+  box.innerHTML='';
+
+  reorderDisplayTokens.forEach((token,displayIndex)=>{
     const b=document.createElement('button');
     b.className='tokenbtn';
-    b.textContent=word;
-    if(reorderChosen.includes(i)){b.disabled=true;b.classList.add('used');}
-    b.addEventListener('click',()=>{reorderChosen.push(i);renderReorderTokens();});
+    b.textContent=token.word;
+    if(reorderChosen.includes(displayIndex)){
+      b.disabled=true;
+      b.classList.add('used');
+    }
+    b.addEventListener('click',()=>{
+      reorderChosen.push(displayIndex);
+      renderReorderTokens();
+    });
     box.appendChild(b);
   });
 }
 function checkReorder(){
   const item=reorderData()[reorderIndex];
-  const chosen=reorderChosen.map(i=>item.tokens[i]);
+  const chosen=reorderChosen.map(displayIndex=>reorderDisplayTokens[displayIndex].word);
   const ok=JSON.stringify(chosen)===JSON.stringify(item.order);
   const fb=$('reorderFeedback');
   fb.className='specialfeedback show '+(ok?'ok':'ng');
@@ -1324,6 +1348,14 @@ function deleteUser(){
 
 $('reorderUndoBtn').addEventListener('click',()=>{reorderChosen.pop();renderReorderTokens();});
 $('reorderResetBtn').addEventListener('click',()=>{reorderChosen=[];renderReorderTokens();$('reorderFeedback').className='specialfeedback';});
+$('reorderShuffleBtn').addEventListener('click',()=>{
+  const item=reorderData()[reorderIndex];
+  reorderChosen=[];
+  reorderDisplayTokens=shuffledReorderTokens(item);
+  $('reorderFeedback').className='specialfeedback';
+  $('reorderFeedback').innerHTML='';
+  renderReorderTokens();
+});
 $('reorderCheckBtn').addEventListener('click',checkReorder);
 $('reorderNextBtn').addEventListener('click',()=>{reorderIndex=(reorderIndex+1)%reorderData().length;renderReorder();});
 $('readingSetSelect').addEventListener('change',e=>{readingSetIndex=Number(e.target.value);readingQIndex=0;renderReading();});
