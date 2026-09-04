@@ -157,6 +157,37 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
   .dailycard,.toolpanel{padding:12px}
 }
 
+
+/* ===== v15 学習形式 ===== */
+.mode-select{min-width:130px}
+.specialpanel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;margin-top:10px}
+.specialhead{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.specialtitle{font-size:18px;font-weight:800}
+.sourcebadge{display:inline-block;font-size:11px;padding:4px 7px;border-radius:999px;background:#f3f4f6;color:#5f6b76;margin-left:6px}
+.reorder-jp{font-size:16px;line-height:1.65;margin-top:12px;padding:10px;border-radius:10px;background:#f8fafc}
+.reorder-answer{font-size:18px;line-height:1.8;min-height:64px;border:2px dashed #cbd5e1;border-radius:12px;padding:10px;margin-top:10px;background:#fff}
+.tokenbox{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.tokenbtn{min-height:42px;padding:7px 10px;background:#eef4ff;border-color:#c7d7ff;color:#1d4ed8}
+.tokenbtn.used{opacity:.25}
+.specialfeedback{display:none;margin-top:10px;padding:11px;border-radius:11px;border:1px solid var(--line);line-height:1.7}
+.specialfeedback.show{display:block}
+.specialfeedback.ok{background:#f0fdf4;border-color:#86efac}
+.specialfeedback.ng{background:#fef2f2;border-color:#fca5a5}
+.reading-passage{white-space:pre-wrap;font-size:15px;line-height:1.8;background:#fafbfc;border:1px solid var(--line);border-radius:12px;padding:13px;margin-top:10px;max-height:420px;overflow:auto}
+.reading-q{font-size:18px;font-weight:750;line-height:1.6;margin-top:13px}
+.reading-choices{display:grid;gap:8px;margin-top:10px}
+.listen-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px}
+.listen-card{border:1px solid var(--line);border-radius:13px;padding:11px;background:#fafbfc}
+.listen-card strong{display:block;font-size:14px}
+.listen-links{display:grid;gap:7px;margin-top:9px}
+.listen-links a{display:flex;align-items:center;justify-content:center;text-decoration:none;min-height:42px;border-radius:10px;border:1px solid #c7d7ff;background:#eef4ff;color:#1d4ed8;font-weight:700;font-size:13px}
+@media(max-width:700px){
+ .listen-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:420px){
+ .listen-grid{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -179,6 +210,13 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
     </div>
 
     <div class="controls">
+      <select id="studyTypeSelect" class="mode-select" aria-label="学習形式">
+        <option value="short">短文</option>
+        <option value="conversation">会話文</option>
+        <option value="reorder">語句整序</option>
+        <option value="reading">長文読解</option>
+        <option value="listening">リスニング</option>
+      </select>
       <select id="lessonSelect" aria-label="出題範囲">
         <option value="all">全80問（1〜8回）</option>
         <option value="1">第1回 短文①</option>
@@ -323,6 +361,59 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
   </section>
 
 
+
+  <section id="reorderPanel" class="specialpanel hidden">
+    <div class="specialhead">
+      <div>
+        <span class="specialtitle">語句整序</span>
+        <span id="reorderSource" class="sourcebadge"></span>
+      </div>
+      <div id="reorderCounter" class="qsub"></div>
+    </div>
+    <div id="reorderJapanese" class="reorder-jp"></div>
+    <div id="reorderAnswer" class="reorder-answer"></div>
+    <div id="reorderTokens" class="tokenbox"></div>
+    <div id="reorderFeedback" class="specialfeedback"></div>
+    <div class="toolactions">
+      <button id="reorderUndoBtn">1つ戻す</button>
+      <button id="reorderResetBtn">リセット</button>
+      <button id="reorderCheckBtn" class="primary">答え合わせ</button>
+      <button id="reorderNextBtn">次へ →</button>
+      <a id="reorderAiBtn" href="#" target="_blank" rel="noopener noreferrer">🤖 AIに解説を聞く</a>
+    </div>
+  </section>
+
+  <section id="readingPanel" class="specialpanel hidden">
+    <div class="specialhead">
+      <div>
+        <span class="specialtitle">長文読解</span>
+        <span class="sourcebadge">教材収録問題</span>
+      </div>
+      <select id="readingSetSelect"></select>
+    </div>
+    <div id="readingPassage" class="reading-passage"></div>
+    <div id="readingQCounter" class="qsub" style="margin-top:10px"></div>
+    <div id="readingQuestion" class="reading-q"></div>
+    <div id="readingChoices" class="reading-choices"></div>
+    <div id="readingFeedback" class="specialfeedback"></div>
+    <div class="toolactions">
+      <button id="readingPrevBtn">← 前の問題</button>
+      <button id="readingNextBtn" class="primary">次の問題 →</button>
+      <a id="readingAiBtn" href="#" target="_blank" rel="noopener noreferrer">🤖 AIに長文を解説してもらう</a>
+    </div>
+  </section>
+
+  <section id="listeningPanel" class="specialpanel hidden">
+    <div class="specialhead">
+      <div>
+        <span class="specialtitle">リスニング</span>
+        <span class="sourcebadge">教材QR音声</span>
+      </div>
+    </div>
+    <div class="help">教材のQRコードと同じ出版社の音声ページを開きます。通信環境が必要です。問題はお手元の教材と一緒に使ってください。</div>
+    <div id="listeningList" class="listen-grid"></div>
+  </section>
+
   <section id="quizCard" class="card">
     <div class="quizmeta">
       <div>
@@ -371,6 +462,30 @@ const QUESTIONS_G3 = [{"q": "Jim had a cold yesterday, but he (     ) fine today
 const QUESTIONS_G4 = [{"qid": "G4L01Q01", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 1, "q": "A: Sorry, Lisa. I'm late.\nB: That's OK, David. I only waited for five (     ).", "c": ["minutes", "letters", "faces", "languages"], "a": 0, "e": "five の後には時間を表す複数名詞が必要です。five minutes で「5分」。"}, {"qid": "G4L01Q02", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 2, "q": "A: Where are you going, Debra?\nB: To the department store. I want to (     ) a present for my grandmother. It's her birthday next week.", "c": ["invite", "become", "buy", "stop"], "a": 2, "e": "a present を目的語に取り、「プレゼントを買う」となる buy が合います。"}, {"qid": "G4L01Q03", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 3, "q": "A: Can you help me, Ted? This bag is very (     ).\nB: Sure, Mom.", "c": ["popular", "heavy", "kind", "careful"], "a": 1, "e": "help me と頼む理由として「このバッグはとても重い」が自然なので heavy。"}, {"qid": "G4L01Q04", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 4, "q": "We went to a park and had lunch. The grass was green and the (     ) was blue. It was a beautiful day.", "c": ["size", "shop", "sign", "sky"], "a": 3, "e": "blue になるものとして自然なのは sky。「空が青かった」です。"}, {"qid": "G4L01Q05", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 5, "q": "Takashi wants to be a professional soccer player in the (     ). He belongs to a soccer club and practices soccer after school every day.", "c": ["ground", "gate", "future", "moment"], "a": 2, "e": "in the future で「将来」。将来プロのサッカー選手になりたい、という文です。"}, {"qid": "G4L01Q06", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 6, "q": "A: Ken, it's late. You have school tomorrow. (     ) a shower and go to bed.\nB: OK, Mom.", "c": ["Hear", "Ride", "Close", "Take"], "a": 3, "e": "take a shower で「シャワーを浴びる」という決まった表現です。"}, {"qid": "G4L01Q07", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 7, "q": "A: When will the train (     ) for New York?\nB: At 3:00 in the afternoon.", "c": ["like", "clean", "find", "leave"], "a": 3, "e": "leave for ～ で「～へ向けて出発する」。列車の出発時刻を尋ねています。"}, {"qid": "G4L01Q08", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 8, "q": "Sam came to Tokyo from San Francisco last year. He didn't know anyone at first, but he soon (     ) many new friends.", "c": ["began", "made", "climbed", "held"], "a": 1, "e": "make friends で「友達を作る」。過去なので made friends。"}, {"qid": "G4L01Q09", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 9, "q": "A: You must (     ) quiet in the library, Jack.\nB: Sorry, Ms. Potter.", "c": ["is", "be", "are", "was"], "a": 1, "e": "must の後は動詞の原形。be quiet で「静かにする」なので be。"}, {"qid": "G4L01Q10", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 10, "q": "A: (     ) high is Tokyo Tower?\nB: It's 333 meters.", "c": ["What", "How", "Why", "Where"], "a": 1, "e": "How high ～? で「どのくらい高いですか」。高さを尋ねる表現です。"}, {"qid": "G4L02Q01", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 1, "q": "A: Beth, dinner is ready. (     ) these knives and forks on the table, please.\nB: OK, Mom.", "c": ["Say", "Cut", "Put", "Find"], "a": 2, "e": "put A on B で「AをBの上に置く」。ナイフとフォークをテーブルに置くので Put。"}, {"qid": "G4L02Q02", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 2, "q": "A: How was the (     ) in Hong Kong?\nB: It was rainy.", "c": ["weather", "store", "present", "map"], "a": 0, "e": "It was rainy. が答えなので、尋ねているのは weather「天気」です。"}, {"qid": "G4L02Q03", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 3, "q": "Matthew visited his friend in Chicago two weeks (     ).", "c": ["away", "ago", "hard", "soon"], "a": 1, "e": "two weeks ago で「2週間前」。過去の時を表します。"}, {"qid": "G4L02Q04", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 4, "q": "Billy works in an office from 9 a.m. to 5 p.m. (     ) work, he plays basketball with his friends.", "c": ["Up", "Among", "After", "Down"], "a": 2, "e": "After work で「仕事の後に」。その後バスケットボールをする文です。"}, {"qid": "G4L02Q05", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 5, "q": "A: Excuse me. Can you (     ) me the way to the post office?\nB: It's next to the bank over there.", "c": ["speak", "tell", "drive", "say"], "a": 1, "e": "tell 人 the way to ～ で「人に～への道を教える」。"}, {"qid": "G4L02Q06", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 6, "q": "A: Did you (     ) a good time at the concert?\nB: Yes. I really enjoyed it.", "c": ["take", "send", "have", "answer"], "a": 2, "e": "have a good time で「楽しい時間を過ごす」。Did の後なので原形 have。"}, {"qid": "G4L02Q07", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 7, "q": "A: Mom, what do you (     ) of this picture? I painted it at school today.\nB: It's beautiful, Gina.", "c": ["worry", "ask", "think", "draw"], "a": 2, "e": "What do you think of ～? で「～をどう思いますか」。"}, {"qid": "G4L02Q08", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 8, "q": "A: Becky really (     ) like Kate. Are they sisters?\nB: Yes. Kate is two years older.", "c": ["knows", "stays", "watches", "looks"], "a": 3, "e": "look like ～ で「～に似ている」。主語が Becky なので looks。"}, {"qid": "G4L02Q09", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 9, "q": "Our family took a trip to Rome last winter. We enjoyed (     ) Italian food.", "c": ["eating", "eat", "eats", "ate"], "a": 0, "e": "enjoy の後は動名詞 -ing。enjoyed eating ～ となります。"}, {"qid": "G4L02Q10", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 10, "q": "A: What season do you like, Peter?\nB: I like summer (     ).", "c": ["well", "much", "best", "better"], "a": 2, "e": "like ～ best で「～が一番好き」。"}, {"qid": "G4L03Q01", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 1, "q": "A: Who's that little girl?\nB: That's Carol Griffith. She's Mr. Griffith's (     ).", "c": ["son", "uncle", "brother", "daughter"], "a": 3, "e": "little girl とあるので、Mr. Griffith の daughter「娘」が合います。"}, {"qid": "G4L03Q02", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 2, "q": "A: Ben, I can't (     ) you. Please say your answer again.\nB: Yes, Ms. Parker.", "c": ["hear", "write", "take", "travel"], "a": 0, "e": "もう一度言ってください、と続くので can't hear you「聞こえない」が自然です。"}, {"qid": "G4L03Q03", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 3, "q": "My mother and my sister are in the kitchen now. They're making a (     ) cake for my father's birthday.", "c": ["special", "deep", "late", "careful"], "a": 0, "e": "誕生日のための「特別なケーキ」なので special。"}, {"qid": "G4L03Q04", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 4, "q": "A: Excuse me. Where's the city hall?\nB: It's (     ) the street. You can see it from here.", "c": ["under", "after", "of", "across"], "a": 3, "e": "across the street で「通りの向こう側に」。"}, {"qid": "G4L03Q05", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 5, "q": "Ken is very (     ) at playing the guitar. He belongs to a music club and plays in a band.", "c": ["fun", "long", "good", "cheap"], "a": 2, "e": "be good at ～ing で「～するのが得意」。"}, {"qid": "G4L03Q06", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 6, "q": "A: Bob, please help me with the cleaning.\nB: No (     ), Dad. I'm coming.", "c": ["plan", "problem", "radio", "shoulder"], "a": 1, "e": "No problem. で「いいよ／問題ないよ」。依頼への返答です。"}, {"qid": "G4L03Q07", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 7, "q": "A: You're running too fast, Jim! Can you slow (     ), please?\nB: Sorry, Agnes.", "c": ["off", "in", "away", "down"], "a": 3, "e": "slow down で「速度を落とす／ゆっくりする」。"}, {"qid": "G4L03Q08", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 8, "q": "A: It was raining yesterday. How did you (     ) home, Steve?\nB: By bus.", "c": ["do", "wash", "get", "make"], "a": 2, "e": "get home で「家に着く／帰宅する」。How did you get home? で帰宅手段を尋ねます。"}, {"qid": "G4L03Q09", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 9, "q": "Ms. Brown is our English teacher. She is from Canada and lives with (     ) mother in Tokyo now.", "c": ["her", "she", "his", "hers"], "a": 0, "e": "mother の前には所有格が必要。Ms. Brown は女性なので her mother。"}, {"qid": "G4L03Q10", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 10, "q": "A: Jack, are you free this weekend?\nB: Sorry, Cathy. I have a lot of homework (     ).", "c": ["do", "did", "to do", "does"], "a": 2, "e": "have homework to do で「やるべき宿題がある」。"}, {"qid": "G4L04Q01", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 1, "q": "Our school (     ) opens at 8:00 every day. Many students go there to study in the morning.", "c": ["library", "country", "festival", "fruit"], "a": 0, "e": "生徒が勉強しに行き、8時に開く場所なので library「図書館」。"}, {"qid": "G4L04Q02", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 2, "q": "The train (     ) at the station on time this morning.", "c": ["finished", "helped", "used", "arrived"], "a": 3, "e": "arrive at ～ で「～に到着する」。the station の前は at。"}, {"qid": "G4L04Q03", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 3, "q": "A: Oliver, your grandmother is listening to the radio, so please be (     ).\nB: Sorry, Mom.", "c": ["wrong", "hungry", "cold", "quiet"], "a": 3, "e": "ラジオを聞いているので be quiet「静かにする」が自然です。"}, {"qid": "G4L04Q04", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 4, "q": "A: I have two (     ) for the movie tonight. Do you want to go?\nB: Sure, I'd love to.", "c": ["jobs", "tickets", "places", "contests"], "a": 1, "e": "映画に行くために2枚持っているものは tickets「チケット」。"}, {"qid": "G4L04Q05", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 5, "q": "A: Is Rachel coming to the party tonight?\nB: I (     ) so. I really want to see her.", "c": ["show", "hope", "wear", "help"], "a": 1, "e": "I hope so. で「そうだといいな」。"}, {"qid": "G4L04Q06", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 6, "q": "A: I'm looking (     ) my glasses. Did you see them?\nB: I saw them on the kitchen table.", "c": ["to", "on", "for", "off"], "a": 2, "e": "look for ～ で「～を探す」。"}, {"qid": "G4L04Q07", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 7, "q": "A: I'm sorry, but I can't go to the party tonight. Please (     ) hello to Joe.\nB: OK, I will.", "c": ["say", "wait", "check", "give"], "a": 0, "e": "say hello to 人 で「人によろしく言う／こんにちはと言う」。"}, {"qid": "G4L04Q08", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 8, "q": "Paul usually (     ) up at 6:00 in the morning and goes for a walk before breakfast.", "c": ["wakes", "takes", "works", "tries"], "a": 0, "e": "wake up で「目を覚ます／起きる」。主語 Paul なので wakes。"}, {"qid": "G4L04Q09", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 9, "q": "I bought a new computer yesterday. It's (     ) useful than my old one.", "c": ["more", "better", "most", "best"], "a": 0, "e": "useful の比較級は more useful。than が決め手です。"}, {"qid": "G4L04Q10", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 10, "q": "A: (     ) you go to Jessica's house last night?\nB: Yes, I did.", "c": ["Do", "Did", "Are", "Were"], "a": 1, "e": "last night と Yes, I did. から過去形の疑問文。Did が入ります。"}];
 let CURRENT_LEVEL = localStorage.getItem('english-eiken-level-v1') || '3';
 function currentQuestions(){ return CURRENT_LEVEL==='4' ? QUESTIONS_G4 : QUESTIONS_G3; }
+
+let CURRENT_STUDY_TYPE = localStorage.getItem('english-study-type-v1') || 'short';
+
+function baseQuestionsForType(){
+  if(CURRENT_STUDY_TYPE==='conversation'){
+    return CURRENT_LEVEL==='4'
+      ? CONVERSATION_G4
+      : QUESTIONS_G3.filter(q=>q.lesson>=5 && q.lesson<=8);
+  }
+  if(CURRENT_STUDY_TYPE==='short'){
+    return CURRENT_LEVEL==='4'
+      ? QUESTIONS_G4
+      : QUESTIONS_G3.filter(q=>q.lesson>=1 && q.lesson<=4);
+  }
+  return currentQuestions();
+}
+
+const CONVERSATION_G4 = [{"qid": "G4C05Q01", "lesson": 5, "lessonTitle": "会話文の文空所補充①", "no": 1, "q": "Wife: I don't have time to clean the bathroom today.\nHusband: That's OK. (     )", "c": ["I'm hungry.", "It's in the kitchen.", "It's for you.", "I'll do it."], "a": 3, "e": "「今日は浴室を掃除する時間がない」に対し、「僕がやるよ」と申し出る流れが自然です。"}, {"qid": "G4C05Q02", "lesson": 5, "lessonTitle": "会話文の文空所補充①", "no": 2, "q": "Girl: Let's go to the movies this afternoon.\nBoy: Sorry, I can't today. But (     )\nGirl: OK. Let's go then.", "c": ["I'm free tomorrow.", "I'm a member.", "I'm not a member.", "I'm from the United States."], "a": 0, "e": "today は行けないが、そのあと一緒に行く約束になるので「明日はひまです」が自然です。"}, {"qid": "G4C05Q03", "lesson": 5, "lessonTitle": "会話文の文空所補充①", "no": 3, "q": "Father: When are you going to the zoo, David?\nSon: (     ) I'm going with Bob and Steve.", "c": ["Near the park.", "Yes, I will.", "I'm ready.", "Next Sunday."], "a": 3, "e": "When are you going ...? は「いつ行くの？」なので、時を答える Next Sunday。"}, {"qid": "G4C05Q04", "lesson": 5, "lessonTitle": "会話文の文空所補充①", "no": 4, "q": "Mother: How was your school camping trip, Cathy?\nDaughter: I want to go again. (     )", "c": ["The train was early.", "I forgot to go to school.", "I didn't eat lunch.", "It was really fun."], "a": 3, "e": "「また行きたい」と言っているので、「本当に楽しかった」が自然です。"}, {"qid": "G4C05Q05", "lesson": 5, "lessonTitle": "会話文の文空所補充①", "no": 5, "q": "Boy: Did you play in the basketball game yesterday?\nGirl: No, I didn't. (     ) because I had a cold.", "c": ["It's not open.", "It's at four o'clock.", "I made it.", "I stayed at home."], "a": 3, "e": "風邪をひいていたので、試合には行かず「家にいました」が自然です。"}, {"qid": "G4C05Q06", "lesson": 5, "lessonTitle": "会話文の文空所補充①", "no": 6, "q": "Boy: I practiced the guitar a lot last night.\nGirl: How long did you practice?\nBoy: (     )", "c": ["It's three dollars.", "I have two.", "For four hours.", "It starts at nine."], "a": 2, "e": "How long は「どのくらいの時間」。時間の長さを答える For four hours。"}, {"qid": "G4C05Q07", "lesson": 5, "lessonTitle": "会話文の文空所補充①", "no": 7, "q": "Father: Let's go, Angela. It's nine o'clock.\nDaughter: (     ) Dad. I have to brush my teeth.", "c": ["It's for you.", "I'll show you.", "Just a moment,", "You're welcome,"], "a": 2, "e": "歯を磨くので少し待ってほしい場面。「ちょっと待って」が自然です。"}, {"qid": "G4C05Q08", "lesson": 5, "lessonTitle": "会話文の文空所補充①", "no": 8, "q": "Man: Excuse me. Where is the bus station?\nWoman: (     )", "c": ["Let's buy one.", "It's just around the corner.", "You're late.", "See you later."], "a": 1, "e": "場所を尋ねられているので「すぐ角を曲がったところです」が答えになります。"}, {"qid": "G4C06Q01", "lesson": 6, "lessonTitle": "会話文の文空所補充②", "no": 1, "q": "Sister: I can't finish my math homework. It's too difficult.\nBrother: (     ) I can help you.\nSister: Thanks.", "c": ["Take care.", "Don't worry.", "I'm ready.", "That's a good idea."], "a": 1, "e": "「難しくて終わらない」に対して「心配しないで。手伝えるよ」が自然です。"}, {"qid": "G4C06Q02", "lesson": 6, "lessonTitle": "会話文の文空所補充②", "no": 2, "q": "Daughter: Dad, I want to go to the post office, but it's raining.\nFather: (     )", "c": ["I'm fine, thank you.", "I saw it yesterday.", "I'll drive you there.", "I wrote to my friend."], "a": 2, "e": "雨なので、父が「車でそこまで送るよ」と言うのが自然です。"}, {"qid": "G4C06Q03", "lesson": 6, "lessonTitle": "会話文の文空所補充②", "no": 3, "q": "Woman 1: I went to a new restaurant for lunch today.\nMan: Really? (     )\nWoman: A vegetable sandwich. It was good.", "c": ["When did you go?", "What did you have?", "Who did you go with?", "Where did you find it?"], "a": 1, "e": "答えが A vegetable sandwich なので、「何を食べたの？」と尋ねています。"}, {"qid": "G4C06Q04", "lesson": 6, "lessonTitle": "会話文の文空所補充②", "no": 4, "q": "Sister: This book about cooking looks interesting. Let's buy it for Mom. (     )\nBrother: Good idea.", "c": ["What do you think?", "What is your favorite food?", "How much is it?", "How do I get there?"], "a": 0, "e": "提案したあと相手の意見を聞いているので What do you think? が自然です。"}, {"qid": "G4C06Q05", "lesson": 6, "lessonTitle": "会話文の文空所補充②", "no": 5, "q": "Boy: Can I use your dictionary, Susan?\nGirl: Sure. (     )", "c": ["I don't have one.", "It's for homework.", "I'm not using it now.", "I read books every day."], "a": 2, "e": "辞書を貸せる理由として「今は使っていない」が自然です。"}, {"qid": "G4C06Q06", "lesson": 6, "lessonTitle": "会話文の文空所補充②", "no": 6, "q": "Father: I'm going to the bookstore. (     )\nDaughter: Yes. I'll go and get my coat.", "c": ["What time is it now?", "Do you want to come with me?", "How do you like it?", "Are you sure?"], "a": 1, "e": "娘が「はい。コートを取ってくる」と答えているので、「一緒に来る？」が自然です。"}, {"qid": "G4C06Q07", "lesson": 6, "lessonTitle": "会話文の文空所補充②", "no": 7, "q": "Man: Excuse me. Which train goes to Central Station?\nWoman: (     )", "c": ["For five dollars.", "A window seat.", "Have a nice trip.", "That blue one does."], "a": 3, "e": "Which train...? に対して列車を指して「その青い電車です」と答えます。"}, {"qid": "G4C06Q08", "lesson": 6, "lessonTitle": "会話文の文空所補充②", "no": 8, "q": "Man: Excuse me. I'd like to buy a sweater.\nSalesclerk: (     ) It's warm and nice.", "c": ["How about this one?", "Who are you?", "Where did you see it?", "What are these?"], "a": 0, "e": "セーターを探す客に商品を勧めるので How about this one? が自然です。"}, {"qid": "G4C07Q01", "lesson": 7, "lessonTitle": "会話文の文空所補充③", "no": 1, "q": "Daughter: These strawberries are for you, Dad.\nFather: Thank you. Would you like some?\nDaughter: No, thanks. (     )", "c": ["I found them here.", "I had some after dinner.", "I'll draw it for you.", "I saw you there."], "a": 1, "e": "いちごを断る理由として「夕食後に食べた」が自然です。"}, {"qid": "G4C07Q02", "lesson": 7, "lessonTitle": "会話文の文空所補充③", "no": 2, "q": "Boy: Hi, Jane. What are you doing?\nGirl: (     ) We're going to have lunch together.", "c": ["I'll go with you.", "You'll love the cafeteria.", "I'm waiting for Becky.", "I'm looking for a new phone."], "a": 2, "e": "「一緒に昼食を食べる」ので、相手を待っている I’m waiting for Becky. が自然です。"}, {"qid": "G4C07Q03", "lesson": 7, "lessonTitle": "会話文の文空所補充③", "no": 3, "q": "Boy: Hey, Gina. I'm going to play in the piano concert on Sunday.\nGirl: Wow! (     ) I want to go to the concert.", "c": ["That's great.", "I'm sorry.", "No problem.", "Here it is."], "a": 0, "e": "コンサートに出る話を聞いて「すごいね！」と喜ぶ流れです。"}, {"qid": "G4C07Q04", "lesson": 7, "lessonTitle": "会話文の文空所補充③", "no": 4, "q": "Girl: What should we get Emily for her birthday?\nBoy: (     )\nGirl: She'll like that.", "c": ["You're very kind.", "Sounds like fun.", "How about some flowers?", "How long is it?"], "a": 2, "e": "誕生日プレゼントを相談しているので「花はどう？」という提案が合います。"}, {"qid": "G4C07Q05", "lesson": 7, "lessonTitle": "会話文の文空所補充③", "no": 5, "q": "Mother: Do you want some more spaghetti, Edward?\nSon: Yes, (     )", "c": ["I want to go there.", "I can't eat it.", "I don't speak Spanish.", "I'm really hungry."], "a": 3, "e": "おかわりを欲しがる理由として「とてもおなかがすいている」が自然です。"}, {"qid": "G4C07Q06", "lesson": 7, "lessonTitle": "会話文の文空所補充③", "no": 6, "q": "Boy: I need a red pen. (     )\nGirl: Yes. Here you are.", "c": ["Do you have one?", "Can you play it?", "Is it difficult?", "What's this?"], "a": 0, "e": "Here you are. と貸しているので「1本持ってる？」と尋ねています。"}, {"qid": "G4C07Q07", "lesson": 7, "lessonTitle": "会話文の文空所補充③", "no": 7, "q": "Salesclerk: May I help you?\nWoman: Yes. (     )\nSalesclerk: They're on the second floor.", "c": ["Are these my shoes?", "Can I try on these shoes?", "Where are the women's shoes?", "Do I have to buy these shoes?"], "a": 2, "e": "答えが「2階です」なので、場所を尋ねる Where are ...? が合います。"}, {"qid": "G4C07Q08", "lesson": 7, "lessonTitle": "会話文の文空所補充③", "no": 8, "q": "Waiter: Good morning, sir. Would you like some coffee?\nMan: (     ) I need milk and sugar, too.", "c": ["No, thank you.", "Yes, please.", "It's not here.", "I don't think so."], "a": 1, "e": "milk and sugar も必要と言っているので、コーヒーを頼む Yes, please. が自然です。"}, {"qid": "G4C08Q01", "lesson": 8, "lessonTitle": "会話文の文空所補充④", "no": 1, "q": "Girl: Are you a good swimmer, Ben?\nBoy: (     ) But I want to learn sometime.", "c": ["I can see the pool from here.", "I don't finish it.", "Yes, I have a brother.", "No, I can't swim."], "a": 3, "e": "「いつか習いたい」と続くので、今は泳げないことを表す答えです。"}, {"qid": "G4C08Q02", "lesson": 8, "lessonTitle": "会話文の文空所補充④", "no": 2, "q": "Woman: I really like this café! (     )\nMan: Sounds good.", "c": ["We'll have two, please.", "Let's come back again.", "It's for sale.", "The drinks are over there."], "a": 1, "e": "カフェを気に入っているので「また来よう」という提案が自然です。"}, {"qid": "G4C08Q03", "lesson": 8, "lessonTitle": "会話文の文空所補充④", "no": 3, "q": "Man: Excuse me. I want to go to City Hall. Is it near here?\nWoman: Yes, (     )", "c": ["nice to meet you.", "I'm having a good time.", "I have some questions.", "it's on the next corner."], "a": 3, "e": "場所を尋ねられ、「近い」と答えたあと場所を説明する文です。"}, {"qid": "G4C08Q04", "lesson": 8, "lessonTitle": "会話文の文空所補充④", "no": 4, "q": "Man 1: How did you go to the airport?\nMan 2: (     ) It took an hour and a half.", "c": ["Last month.", "By bus.", "At ten o'clock.", "My favorite place."], "a": 1, "e": "How did you go...? は交通手段を尋ねるので By bus.。"}, {"qid": "G4C08Q05", "lesson": 8, "lessonTitle": "会話文の文空所補充④", "no": 5, "q": "Father: Are you in your room, Kate? Can you help me in the garden?\nDaughter: All right, Dad. (     )", "c": ["It's not mine.", "I'm coming.", "It's in the car.", "I'll go to bed."], "a": 1, "e": "手伝いを頼まれて「今行くよ」と答えるのが自然です。"}, {"qid": "G4C08Q06", "lesson": 8, "lessonTitle": "会話文の文空所補充④", "no": 6, "q": "Woman: Excuse me. I want to buy these books.\nSalesclerk: Ten dollars.\nWoman: (     )", "c": ["How much are they?", "How many do you have?", "How old are you?", "How are you feeling?"], "a": 0, "e": "Ten dollars. が答えなので値段を尋ねる How much are they?。"}, {"qid": "G4C08Q07", "lesson": 8, "lessonTitle": "会話文の文空所補充④", "no": 7, "q": "Boy 1: When is the science test, Max?\nBoy 2: (     ) Let's ask Mrs. Parker.", "c": ["I found it yesterday.", "Not too bad.", "I'm not sure.", "I don't like science."], "a": 2, "e": "先生に確認しようと言っているので「よく分からない」が自然です。"}, {"qid": "G4C08Q08", "lesson": 8, "lessonTitle": "会話文の文空所補充④", "no": 8, "q": "Girl: Thank you for coming to my volleyball game, Uncle Billy.\nUncle: (     ) I enjoyed it very much.", "c": ["I can't play with you.", "It's over there.", "Be quiet, please.", "You're welcome."], "a": 3, "e": "Thank you. に対する返事なので You're welcome. が自然です。"}];
+const REORDER_G4 = [{"id": "G4R09Q01", "lesson": 9, "jp": "あなたはどんな音楽が好きですか。", "prefix": "What", "suffix": "like?", "tokens": ["music", "of", "do", "kind", "you"], "order": ["kind", "of", "music", "do", "you"]}, {"id": "G4R09Q02", "lesson": 9, "jp": "ジェシカは喫茶店でコーヒーを1杯飲んでいました。", "prefix": "Jessica", "suffix": "in the coffee shop.", "tokens": ["a cup", "drinking", "was", "of", "coffee"], "order": ["was", "drinking", "a cup", "of", "coffee"]}, {"id": "G4R09Q03", "lesson": 9, "jp": "ウォルター先生の英語の授業では、日本語は話さないでください。", "prefix": "Please", "suffix": "English class.", "tokens": ["speak", "Mr. Walter's", "don't", "in", "Japanese"], "order": ["don't", "speak", "Japanese", "in", "Mr. Walter's"]}, {"id": "G4R09Q04", "lesson": 9, "jp": "メアリーは朝食の前に散歩に行くのが好きです。", "prefix": "Mary", "suffix": "", "tokens": ["a walk", "to take", "likes", "breakfast", "before"], "order": ["likes", "to take", "a walk", "before", "breakfast"]}, {"id": "G4R09Q05", "lesson": 9, "jp": "私の部屋は兄の部屋ほど大きくありません。", "prefix": "", "suffix": "as my brother's.", "tokens": ["big", "is", "as", "not", "my room"], "order": ["my room", "is", "not", "as", "big"]}, {"id": "G4R09Q06", "lesson": 9, "jp": "ジーナはケイトと一緒に映画を見に行きました。", "prefix": "", "suffix": "Kate.", "tokens": ["Gina", "a movie", "went", "with", "to see"], "order": ["Gina", "went", "to see", "a movie", "with"]}, {"id": "G4R10Q01", "lesson": 10, "jp": "宿題を手伝ってくれてありがとう。", "prefix": "", "suffix": "with my homework.", "tokens": ["you", "me", "thank", "helping", "for"], "order": ["thank", "you", "for", "helping", "me"]}, {"id": "G4R10Q02", "lesson": 10, "jp": "イタリア旅行はいかがでしたか。", "prefix": "", "suffix": "Italy?", "tokens": ["your", "to", "trip", "was", "how"], "order": ["how", "was", "your", "trip", "to"]}, {"id": "G4R10Q03", "lesson": 10, "jp": "ケイトは英語の歌を歌うのが上手です。", "prefix": "Kate", "suffix": "songs.", "tokens": ["singing", "good", "English", "is", "at"], "order": ["is", "good", "at", "singing", "English"]}, {"id": "G4R10Q04", "lesson": 10, "jp": "私たちは明日バドミントンをしません。", "prefix": "We're", "suffix": "tomorrow.", "tokens": ["not", "play", "to", "badminton", "going"], "order": ["not", "going", "to", "play", "badminton"]}, {"id": "G4R10Q05", "lesson": 10, "jp": "もっとゆっくり話してくれますか。", "prefix": "", "suffix": "please?", "tokens": ["more", "you", "can", "slowly", "speak"], "order": ["can", "you", "speak", "more", "slowly"]}, {"id": "G4R10Q06", "lesson": 10, "jp": "外出するときにはコートを持っていきなさい。", "prefix": "", "suffix": "", "tokens": ["go", "you", "take", "when", "your coat", "out"], "order": ["when", "you", "go", "out", "take", "your coat"]}, {"id": "G4R11Q01", "lesson": 11, "jp": "どこでそのかさを見つけましたか。", "prefix": "", "suffix": "?", "tokens": ["where", "the umbrella", "you", "did", "find"], "order": ["where", "did", "you", "find", "the umbrella"]}, {"id": "G4R11Q02", "lesson": 11, "jp": "駅から市役所まではバスに乗った方がいいですよ。", "prefix": "You should", "suffix": "City Hall.", "tokens": ["from", "the bus", "the station", "to", "take"], "order": ["take", "the bus", "from", "the station", "to"]}, {"id": "G4R11Q03", "lesson": 11, "jp": "私の母は、40歳のときにスペイン語の勉強を始めました。", "prefix": "My mother started", "suffix": "forty years old.", "tokens": ["she", "Spanish", "learning", "was", "when"], "order": ["learning", "Spanish", "when", "she", "was"]}, {"id": "G4R11Q04", "lesson": 11, "jp": "私のお気に入りのモデルカーをあなたに見せてあげます。", "prefix": "I", "suffix": "model cars.", "tokens": ["you", "favorite", "will", "my", "show"], "order": ["will", "show", "you", "my", "favorite"]}, {"id": "G4R11Q05", "lesson": 11, "jp": "ジムは数学より音楽が好きです。", "prefix": "Jim", "suffix": "", "tokens": ["music", "than", "likes", "math", "better"], "order": ["likes", "music", "better", "than", "math"]}, {"id": "G4R11Q06", "lesson": 11, "jp": "あなたのおじいさんはどのくらいの頻度で釣りに行きますか。", "prefix": "", "suffix": "fishing?", "tokens": ["often", "does", "grandfather", "go", "your", "How"], "order": ["How", "often", "does", "your", "grandfather", "go"]}, {"id": "G4R12Q01", "lesson": 12, "jp": "私は週末、図書館でレポートを書くつもりです。", "prefix": "I", "suffix": "on the weekend.", "tokens": ["a report", "will", "the library", "write", "in"], "order": ["will", "write", "a report", "in", "the library"]}, {"id": "G4R12Q02", "lesson": 12, "jp": "あなたのクラスで一番歌がうまいのは誰ですか。", "prefix": "", "suffix": "your class?", "tokens": ["who", "in", "singer", "the best", "is"], "order": ["who", "is", "the best", "singer", "in"]}, {"id": "G4R12Q03", "lesson": 12, "jp": "夕食の前にシャワーを浴びますか、ピーター。", "prefix": "", "suffix": "dinner, Peter?", "tokens": ["will", "a shower", "do", "before", "take", "you"], "order": ["will", "you", "take", "a shower", "before"]}, {"id": "G4R12Q04", "lesson": 12, "jp": "ケンは将来パイロットになりたいと思っています。", "prefix": "Ken", "suffix": "the future.", "tokens": ["to", "a pilot", "in", "wants", "be"], "order": ["wants", "to", "be", "a pilot", "in"]}, {"id": "G4R12Q05", "lesson": 12, "jp": "タケシはバレーボール部のメンバーですか。", "prefix": "", "suffix": "?", "tokens": ["the volleyball club", "of", "is", "Takeshi", "a member"], "order": ["is", "Takeshi", "a member", "of", "the volleyball club"]}, {"id": "G4R12Q06", "lesson": 12, "jp": "ベス、数学の宿題の手伝いが必要ですか。", "prefix": "Beth, do", "suffix": "math homework?", "tokens": ["help", "your", "you", "with", "need"], "order": ["you", "need", "help", "with", "your"]}];
+const REORDER_G3 = [{"id": "G3R01", "lesson": 1, "jp": "私は放課後によくテニスをします。", "prefix": "", "suffix": "", "tokens": ["I", "often", "play", "tennis", "after school."], "order": ["I", "often", "play", "tennis", "after school."]}, {"id": "G3R02", "lesson": 1, "jp": "あなたは今まで北海道へ行ったことがありますか。", "prefix": "", "suffix": "", "tokens": ["Have", "you", "ever", "been", "to Hokkaido?"], "order": ["Have", "you", "ever", "been", "to Hokkaido?"]}, {"id": "G3R03", "lesson": 1, "jp": "私は英語を勉強することに決めました。", "prefix": "", "suffix": "", "tokens": ["I", "decided", "to study", "English."], "order": ["I", "decided", "to study", "English."]}, {"id": "G3R04", "lesson": 1, "jp": "私は将来外国を旅行したいです。", "prefix": "", "suffix": "", "tokens": ["I", "want", "to travel", "abroad", "in the future."], "order": ["I", "want", "to travel", "abroad", "in the future."]}, {"id": "G3R05", "lesson": 1, "jp": "この本は私には難しすぎます。", "prefix": "", "suffix": "", "tokens": ["This book", "is", "too", "difficult", "for me."], "order": ["This book", "is", "too", "difficult", "for me."]}, {"id": "G3R06", "lesson": 2, "jp": "駅への行き方を教えてくれますか。", "prefix": "", "suffix": "", "tokens": ["Can", "you", "tell", "me", "the way to the station?"], "order": ["Can", "you", "tell", "me", "the way to the station?"]}, {"id": "G3R07", "lesson": 2, "jp": "私は宿題を終えたところです。", "prefix": "", "suffix": "", "tokens": ["I", "have", "just", "finished", "my homework."], "order": ["I", "have", "just", "finished", "my homework."]}, {"id": "G3R08", "lesson": 2, "jp": "雨が降っていたので家にいました。", "prefix": "", "suffix": "", "tokens": ["I", "stayed", "home", "because", "it was raining."], "order": ["I", "stayed", "home", "because", "it was raining."]}, {"id": "G3R09", "lesson": 2, "jp": "私は彼女に電話をかけたいです。", "prefix": "", "suffix": "", "tokens": ["I", "want", "to call", "her", "on the phone."], "order": ["I", "want", "to call", "her", "on the phone."]}, {"id": "G3R10", "lesson": 2, "jp": "明日は早く起きなければなりません。", "prefix": "", "suffix": "", "tokens": ["I", "have to", "get up", "early", "tomorrow."], "order": ["I", "have to", "get up", "early", "tomorrow."]}, {"id": "G3R11", "lesson": 3, "jp": "このコンピューターは古いものより便利です。", "prefix": "", "suffix": "", "tokens": ["This computer", "is", "more useful", "than", "the old one."], "order": ["This computer", "is", "more useful", "than", "the old one."]}, {"id": "G3R12", "lesson": 3, "jp": "私は彼に会えてうれしかったです。", "prefix": "", "suffix": "", "tokens": ["I", "was", "glad", "to see", "him."], "order": ["I", "was", "glad", "to see", "him."]}, {"id": "G3R13", "lesson": 3, "jp": "彼は来月学校へ戻れるでしょう。", "prefix": "", "suffix": "", "tokens": ["He", "will", "be able to", "go back to school", "next month."], "order": ["He", "will", "be able to", "go back to school", "next month."]}, {"id": "G3R14", "lesson": 3, "jp": "私は英語を話すことに興味があります。", "prefix": "", "suffix": "", "tokens": ["I", "am", "interested in", "speaking", "English."], "order": ["I", "am", "interested in", "speaking", "English."]}, {"id": "G3R15", "lesson": 3, "jp": "あなたはどのくらいここに住んでいますか。", "prefix": "", "suffix": "", "tokens": ["How long", "have", "you", "lived", "here?"], "order": ["How long", "have", "you", "lived", "here?"]}, {"id": "G3R16", "lesson": 4, "jp": "私は友達と一緒に昼食を食べる予定です。", "prefix": "", "suffix": "", "tokens": ["I", "am going to", "have lunch", "with", "my friends."], "order": ["I", "am going to", "have lunch", "with", "my friends."]}, {"id": "G3R17", "lesson": 4, "jp": "この写真を見せてくれてありがとう。", "prefix": "", "suffix": "", "tokens": ["Thank you", "for", "showing", "me", "this picture."], "order": ["Thank you", "for", "showing", "me", "this picture."]}, {"id": "G3R18", "lesson": 4, "jp": "私は彼ほど速く走れません。", "prefix": "", "suffix": "", "tokens": ["I", "cannot", "run", "as fast as", "he can."], "order": ["I", "cannot", "run", "as fast as", "he can."]}, {"id": "G3R19", "lesson": 4, "jp": "もし明日晴れたら、私たちは公園へ行きます。", "prefix": "", "suffix": "", "tokens": ["If", "it is sunny", "tomorrow,", "we will go", "to the park."], "order": ["If", "it is sunny", "tomorrow,", "we will go", "to the park."]}, {"id": "G3R20", "lesson": 4, "jp": "私はいつか外国の人と英語で話したいです。", "prefix": "", "suffix": "", "tokens": ["I", "want to", "speak English", "with people from other countries", "someday."], "order": ["I", "want to", "speak English", "with people from other countries", "someday."]}];
+const READING_G3 = [{"id": "G3READ09", "title": "第9回 長文①：Diving Tour / Orchestra Club", "passage": "Diving Tour — Why don't you join us?\n\nThe Marine Diving Club is going on a five-day diving tour from July 5th to 9th. There will be lessons before the tour on July 3rd and 4th.\n\nYou haven't been diving before? Don't worry, our instructors will help you.\n\nCost: $200\nWe will lend you: A wetsuit, swimming goggles, a snorkel, and fins.\nYou only have to bring a T-shirt and a pair of sandals.\n\nIf you're interested or have any questions, contact the Marine Diving Club at 756-3398. We are open every day from 9 a.m. to 5 p.m.\n\n---\nJoin Our Orchestra Club\n\nThe orchestra club is looking for some new members for the next concert. Every September, our club plays many different pieces of music at the city concert hall. This year, we will perform Beethoven. We need two performers: one to play the violin and one to play the flute.\n\nMeeting:\nIf you are interested, come to the music room on Wednesday, June 13th at 4 p.m. Mr. Blake will talk about the concert. He will also answer any questions you have.\n\nClub activities:\nWe practice every Monday, Wednesday, and Saturday.\nMonday 4:30 p.m.–6:30 p.m.\nWednesday 3:30 p.m.–6:30 p.m.\nSaturday 1:30 p.m.–3:30 p.m.", "questions": [{"q": "How long will the diving tour take?", "c": ["Two days.", "Three days.", "Five days.", "Nine days."], "a": 2, "e": "July 5th to 9th とあり、five-day diving tour と明記されています。"}, {"q": "If people want to know more about the tour, they should", "c": ["go to the hotel pool.", "visit the diving school.", "send an e-mail to the Marine Diving Club.", "call the Marine Diving Club."], "a": 3, "e": "contact ... at 756-3398 と電話番号が書かれています。"}, {"q": "What is the reason for the orchestra club's notice?", "c": ["They are inviting students to go to the concert.", "They need new violins.", "They lost some of their performers.", "They are looking for some new members for the concert."], "a": 3, "e": "最初に is looking for some new members for the next concert とあります。"}, {"q": "If people have any questions, they can", "c": ["practice the violin.", "ask at the meeting.", "call Mr. Blake.", "go to the school gym."], "a": 1, "e": "Meeting の説明で Mr. Blake will also answer any questions とあります。"}]}, {"id": "G3READ10", "title": "第10回 長文②：Peter's Accident", "passage": "From: Meg O'Brian\nTo: Peter Nelson\nDate: February 1\nSubject: Are you OK?\n\nDear Peter,\nToday at school, Mr. Stephens told us that you broke your shoulder while you were snowboarding. He also told us that you have to stay home for a few weeks. Are you OK? We are very worried about you. We all hope you get better soon.\nBest wishes,\nMeg\n\nFrom: Peter Nelson\nTo: Meg O'Brian\nDate: February 2\nSubject: I'm fine!\n\nHi Meg,\nThank you for your e-mail. I'm getting much better. Last Sunday, I went snowboarding with my cousins. It was my first time to go snowboarding and I fell down and hit my right shoulder. My cousins took me to the hospital. Unfortunately, I broke my shoulder, so I had to have an operation. I'm at home now, but I go to the hospital every day for rehabilitation. Today, my doctor told me that I can go to school next month. I miss school. Please say hello to everyone in the class.\nYour friend,\nPeter\n\nFrom: Meg O'Brian\nTo: Peter Nelson\nDate: February 5\nSubject: Big news\n\nHi Peter,\nI'm glad that you're getting better. Everyone in class wrote you something in a get-well card today. We are going to send it tomorrow. We all miss you. We are looking forward to seeing you in school next month!\nYours,\nMeg", "questions": [{"q": "Who told Meg about Peter's accident?", "c": ["Meg's father.", "Peter's father.", "Peter's cousins.", "Mr. Stephens."], "a": 3, "e": "最初のメールに Mr. Stephens told us ... とあります。"}, {"q": "What did Peter's doctor say to him?", "c": ["He can go snowboarding next month.", "He will have an operation again next month.", "He will be able to walk next month.", "He will be able to go to school next month."], "a": 3, "e": "Peter のメールに my doctor told me that I can go to school next month とあります。"}, {"q": "What did Meg's classmates do for Peter?", "c": ["They wrote a card.", "They sent some flowers.", "They went to his house.", "They called him."], "a": 0, "e": "Everyone in class wrote you something in a get-well card とあります。"}]}, {"id": "G3READ11", "title": "第11回 長文③：Donald Hings", "passage": "Donald Hings was a Canadian man who loved radios. He was born in 1907, and in those days, few people had radios. However, Hings built one for himself in 1921, when he was just 14. He enjoyed listening to radio stations on it. Hings never went to college, but he learned a lot about how to make and use radios. Later, he got a job as a radio engineer.\n\nOne day in 1933, Hings was taken by airplane to a place in the forest for his job. He had a big problem. There was a big storm, and the airplane could not come back to get him. He had to hike a long way back to town. He thought people should have small radios so they can get help when they are in danger. In those days, radios were very large. Hings began making a small one.\n\nIn the 1930s, radios were very simple. People could listen with them, but they could not use them for talking. However, Hings's radios were different. People could talk to each other with them. He built the first one in 1937 and called it a “packset.” Later, they were called “walkie-talkies.”\n\nSome people think that walkie-talkies were first used by soldiers in World War II. However, pilots started using them before that, in 1937. Police first used them in 1940. In 1962, a toy company started making walkie-talkies for children. Now, most people use cell phones, but Hings's walkie-talkies were very important for communication for many years.", "questions": [{"q": "What did Donald Hings do in 1921?", "c": ["He studied radios at college.", "He worked at a radio station.", "He built his own radio.", "He became a radio engineer."], "a": 2, "e": "Hings built one for himself in 1921 とあります。"}, {"q": "After Hings had a problem in the forest,", "c": ["he had to walk back to town.", "he used a radio to get help.", "he had to fly in an airplane.", "he got hurt during a storm."], "a": 0, "e": "He had to hike a long way back to town とあります。"}, {"q": "What was special about Hings' radios?", "c": ["People loved their sound.", "People could talk with them.", "They were bigger than packsets.", "They were louder than other radios."], "a": 1, "e": "People could talk to each other with them が特徴です。"}, {"q": "Who started using walkie-talkies first?", "c": ["Soldiers.", "Pilots.", "Police.", "Children."], "a": 1, "e": "pilots started using them ... in 1937 とあります。"}, {"q": "What is this story about?", "c": ["A famous radio company.", "A popular radio station in Canada.", "The world's first radio.", "A man who made a new kind of radio."], "a": 3, "e": "Donald Hings が新しい種類の無線機を作った話です。"}]}, {"id": "G3READ12", "title": "第12回 長文④：Schools on Wheels", "passage": "One day in 1926, a train left the city of Toronto, Canada. It was Canada's first school on wheels. On the train was a man named Fred Sloman. He was traveling to the north part of Canada. His job was to teach the children of miners and other people who lived far from normal schools.\n\nThere were few people living in the Canadian north. There were no schools for the children. Also, many of the people there could not read and write, so they could not teach their children. The only chance for the children to learn was when the train stopped near people's homes. It usually stayed in one place for a week. Sloman taught reading, math, and other subjects. When the train was gone, the students did homework for about three weeks. The train visited each place about five times every year.\n\nSloman was a very kind man. After he finished teaching the students, he also taught their parents. He gave them free lessons in the evenings. In the winter, there were Christmas parties for the students. Sloman gave gifts to all of them. Sloman's wife traveled with him, and cooked meals and gave clothes to poor students' families.\n\nOther places in Canada also had school trains. In the 1940s, there were seven of them. However, in the 1950s, more roads were being built, so more students could go to schools by bus. Fewer students studied on the school trains. The last school train was in 1967. Today, Sloman's train car has become a museum.", "questions": [{"q": "Fred Sloman worked as", "c": ["a teacher.", "a train driver.", "a miner.", "a doctor for children."], "a": 0, "e": "His job was to teach the children ... とあります。"}, {"q": "Many people living in the Canadian north", "c": ["traveled to a new place every week.", "worked for the train company.", "did not have any children.", "did not know how to read and write."], "a": 3, "e": "many of the people there could not read and write とあります。"}, {"q": "What did Sloman do in the evenings?", "c": ["He helped students with homework.", "He cooked meals for people.", "He taught parents for free.", "He made clothes for children."], "a": 2, "e": "He gave them free lessons in the evenings とあります。"}, {"q": "What happened in the 1950s?", "c": ["Seven school trains were made.", "More students took buses to school.", "The last school train stopped running.", "Sloman's train car became a museum."], "a": 1, "e": "more roads were being built, so more students could go to schools by bus とあります。"}, {"q": "What is this story about?", "c": ["A man who made a new kind of train.", "A school that could move around.", "A famous place in northern Canada.", "A museum with many trains in it."], "a": 1, "e": "列車で移動する学校（school on wheels）についての話です。"}]}];
+const READING_G4 = [{"id": "G4READ13", "title": "第13回 長文①：Train Museum / Movie Festival", "passage": "Trip to Brooklyn Train Museum\n\nOn October 13th, students will go to the Brooklyn Train Museum.\n\n• Meet at the school gate at 8:15 a.m.\n• Class A will be on the 1st bus with Mr. Adams, and Class B will be on the 2nd bus with Ms. Parks.\n• Buses will leave school at 8:30 a.m.\n• Buses will return to school at 3:00 p.m.\n• Don't forget to bring your lunch with you.\n\n---\nMorgan Hill Theater — Movie Festival\n\nWe will have a movie festival this weekend.\nDay 1: Saturday, June 30th from 6 p.m. to 10 p.m.\nDay 2: Sunday, July 1st from 5 p.m. to 9 p.m.\n\nPrices:\nStudent: $2.00\nAdult: $4.50\n\nIf you come in a group of more than 5 people, you will get a free large popcorn!", "questions": [{"q": "What time will the buses leave school?", "c": ["At 8:15 a.m.", "At 8:30 a.m.", "At 3:00 p.m.", "At 4:00 p.m."], "a": 1, "e": "Buses will leave school at 8:30 a.m. とあります。"}, {"q": "What do students have to bring?", "c": ["A museum ticket.", "A photo of a train.", "Their lunch.", "Their favorite bag."], "a": 2, "e": "Don't forget to bring your lunch with you. が決め手です。"}, {"q": "What time will the movie start on Saturday?", "c": ["At 5 p.m.", "At 6 p.m.", "At 9 p.m.", "At 10 p.m."], "a": 1, "e": "Saturday ... from 6 p.m. to 10 p.m. とあります。"}, {"q": "How much is a student ticket?", "c": ["$1.00.", "$2.00.", "$4.50.", "$5.00."], "a": 1, "e": "Prices の Student: $2.00 を確認します。"}]}, {"id": "G4READ14", "title": "第14回 長文②：Let's go to the park!", "passage": "From: Martin Charles\nTo: Tomoaki Yokota\nDate: July 9\nSubject: Let's go to the park!\n\nDear Tomoaki,\nHi. My family is going to Walnut Park next Sunday. Do you want to come? Robert and Jim are coming. My dad will take us to the park by car. We're leaving at 10:30. My mom will make some sandwiches and cookies for us. We're going to play badminton and soccer there. It'll be fun!\nYour friend,\nMartin\n\nFrom: Tomoaki Yokota\nTo: Martin Charles\nDate: July 10\nSubject: Yes!\n\nDear Martin,\nThank you for inviting me. I really want to go. Walnut Park is my favorite place. My family often goes there on weekends. My mother will bake an apple pie for us. I'll bring it. I'll be at your house at 10:15 a.m.\nSee you,\nTomoaki", "questions": [{"q": "What will the boys do at Walnut Park?", "c": ["Play soccer.", "Ride bicycles.", "Go hiking.", "Go camping."], "a": 0, "e": "We're going to play badminton and soccer there. とあります。"}, {"q": "What will Tomoaki bring to the park?", "c": ["An apple pie.", "Some cookies.", "A soccer ball.", "Some flowers."], "a": 0, "e": "My mother will bake an apple pie for us. I'll bring it. とあります。"}, {"q": "Where will Tomoaki meet Martin on Sunday?", "c": ["At Walnut Park.", "At Martin's house.", "At school.", "At Jim's house."], "a": 1, "e": "I'll be at your house at 10:15 a.m. とあります。"}]}, {"id": "G4READ15", "title": "第15回 長文③：Potluck Party", "passage": "Last summer, Erika went to the United States to study English. She stayed at her host family's house for three weeks.\n\nOne day, Erika's host mother said, “We'll have a potluck party next Sunday.” Erika asked, “What is a potluck party?” Her host mother answered, “At a potluck party, each person brings a different dish.”\n\nThe next day, Erika asked her host sister Cathy, “What are you going to make for the potluck party?” Cathy said, “I'll make lemon pies. How about you?” “I'll make tempura,” Erika answered. Cathy smiled and said, “That's a good idea. Tempura is my favorite Japanese food!”\n\nOn the day of the party, Erika made tempura with carrots, onions, and eggplants. Everybody at the party enjoyed Erika's tempura and Cathy's lemon pies. Erika sang some Japanese songs and Cathy's mother played the piano. Erika had a very good time.", "questions": [{"q": "What did Erika do last summer?", "c": ["She worked at a restaurant in the United States.", "She visited her sister in the United States.", "She went to the United States to study English.", "She took cooking lessons in the United States."], "a": 2, "e": "最初の文に went to the United States to study English とあります。"}, {"q": "When did Erika's host family have a potluck party?", "c": ["On Monday.", "On Tuesday.", "On Saturday.", "On Sunday."], "a": 3, "e": "We'll have a potluck party next Sunday. とあります。"}, {"q": "Who is Cathy?", "c": ["Erika's host sister.", "Erika's host mother.", "Erika's friend at school.", "Erika's teacher at school."], "a": 0, "e": "Erika asked her host sister Cathy とあります。"}, {"q": "What did Cathy make for the party?", "c": ["Some sandwiches.", "Some vegetable soup.", "Some lemon pies.", "Some salad."], "a": 2, "e": "Cathy said, “I'll make lemon pies.” が決め手です。"}, {"q": "Who played the piano at the party?", "c": ["Erika did.", "Cathy did.", "Erika's sister did.", "Cathy's mother did."], "a": 3, "e": "Cathy's mother played the piano とあります。"}]}, {"id": "G4READ16", "title": "第16回 長文④：Sea Turtles on the Beach", "passage": "Brandon lives on a small island. He lives with his parents and grandmother. There is a beautiful beach near his house.\n\nOne evening in June, Brandon and his grandmother took a walk on the beach. They found some big black stones there. When Brandon looked at one of the stones carefully, it moved. Brandon was surprised and said to his grandmother, “Look! They are moving, Grandma!” His grandmother said, “They are sea turtles.” “What are they doing here?” Brandon asked his grandmother. She answered, “They are laying eggs.” “Really? I want to see the baby sea turtles,” Brandon said.\n\nA few months later, Brandon went back to the beach again. He found some baby sea turtles there. They were very pretty. Brandon was happy to see them. He took pictures of the baby sea turtles and showed them to his parents and grandmother.", "questions": [{"q": "Where does Brandon live?", "c": ["In a big town.", "On a mountain.", "Near the sea.", "Near a park."], "a": 2, "e": "small island と beach near his house から、海の近くに住んでいます。"}, {"q": "What did Brandon and his grandmother do one evening in June?", "c": ["They went to a restaurant.", "They made dinner together.", "They went to a zoo.", "They took a walk on the beach."], "a": 3, "e": "took a walk on the beach とあります。"}, {"q": "What were the sea turtles doing on the beach?", "c": ["They were eating.", "They were moving into the sea.", "They were laying eggs.", "They were sleeping."], "a": 2, "e": "Grandmother が They are laying eggs. と答えています。"}, {"q": "A few months later, what did Brandon do?", "c": ["He wrote a report about sea turtles.", "He read a book about sea animals.", "He drew pictures of sea turtles.", "He went to the beach again."], "a": 3, "e": "A few months later, Brandon went back to the beach again. とあります。"}, {"q": "What did Brandon show his parents and grandmother?", "c": ["Sea turtle eggs.", "Shells from the beach.", "Stones from the beach.", "Pictures of baby sea turtles."], "a": 3, "e": "He took pictures ... and showed them to his parents and grandmother. とあります。"}]}];
+const LISTENING_G3 = [{"lesson": 21, "title": "会話の応答文選択①", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/3q/01.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/3q/02.html"}, {"lesson": 22, "title": "会話の応答文選択②", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/3q/01.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/3q/03.html"}, {"lesson": 23, "title": "会話の応答文選択③", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/3q/01.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/3q/04.html"}, {"lesson": 24, "title": "会話の内容一致選択①", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/3q/05.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/3q/06.html"}, {"lesson": 25, "title": "会話の内容一致選択②", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/3q/05.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/3q/07.html"}, {"lesson": 26, "title": "会話の内容一致選択③", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/3q/05.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/3q/08.html"}, {"lesson": 27, "title": "文の内容一致選択①", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/3q/09.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/3q/10.html"}, {"lesson": 28, "title": "文の内容一致選択②", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/3q/09.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/3q/11.html"}, {"lesson": 29, "title": "文の内容一致選択③", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/3q/09.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/3q/12.html"}];
+const LISTENING_G4 = [{"lesson": 17, "title": "会話の応答文選択①", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/4q/01.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/4q/02.html"}, {"lesson": 18, "title": "会話の応答文選択②", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/4q/01.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/4q/03.html"}, {"lesson": 19, "title": "会話の応答文選択③", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/4q/01.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/4q/04.html"}, {"lesson": 20, "title": "会話の内容一致選択①", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/4q/05.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/4q/06.html"}, {"lesson": 21, "title": "会話の内容一致選択②", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/4q/05.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/4q/07.html"}, {"lesson": 22, "title": "会話の内容一致選択③", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/4q/05.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/4q/08.html"}, {"lesson": 23, "title": "文の内容一致選択①", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/4q/09.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/4q/10.html"}, {"lesson": 24, "title": "文の内容一致選択②", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/4q/09.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/4q/11.html"}, {"lesson": 25, "title": "文の内容一致選択③", "instruction": "https://service.obunsha.co.jp/tokuten/10pun/4q/09.html", "audio": "https://service.obunsha.co.jp/tokuten/10pun/4q/12.html"}];
 const CHOICE_MEANINGS = {"breaks": "壊す／壊れる、休憩する", "pulls": "引く", "feels": "感じる／〜の気分である", "means": "意味する", "equally": "等しく／同じように", "quietly": "静かに", "clearly": "はっきりと", "brightly": "明るく", "boring": "退屈な", "exciting": "わくわくするような", "glad": "うれしい", "fun": "楽しい／楽しみ", "accidents": "事故", "cultures": "文化", "prizes": "賞・賞品", "difficulties": "困難・難しいこと", "borrow": "借りる", "mail": "郵送する／郵便", "lend": "貸す", "write": "書く", "At": "〜で／〜に（at last で「ついに」）", "On": "〜の上に／〜に", "In": "〜の中に／〜で", "Of": "〜の", "for": "〜のために／〜の間", "out": "外へ／外に", "in": "〜の中に／〜で", "on": "〜の上に／〜で", "make": "作る", "try": "試す／やってみる", "serve": "仕える／提供する", "push": "押す", "cover": "おおう（原形）", "covered": "おおわれた／おおわれている", "covers": "おおう（三人称単数）", "covering": "おおっている", "which": "どちら／どの（関係代名詞）", "whose": "だれの／〜の…（所有）", "whom": "だれを／だれに", "who": "だれ／〜する人", "package": "小包", "machine": "機械", "way": "道／方法", "health": "健康", "if": "もし〜なら", "during": "〜の間に", "since": "〜以来／〜なので", "until": "〜まで", "graduated": "卒業した", "worked": "働いた", "ordered": "注文した", "shared": "共有した／分け合った", "grow": "育つ／育てる", "show": "見せる", "move": "動く／引っ越す", "invite": "招待する", "able": "できる", "sure": "確かな／もちろん", "whole": "全体の／全部の", "enough": "十分な／十分に", "heavy": "重い", "far": "遠い", "high": "高い", "wrong": "間違った", "chance": "機会／チャンス", "secret": "秘密", "course": "講座／進路／コース", "support": "支援／支えること", "bowl": "どんぶり・ボウル一杯", "pair": "一組／一対", "slice": "薄切り一枚／一切れ", "sheet": "一枚（紙・シーツなど）", "do": "する（原形）", "done": "した／された（do の過去分詞）", "to do": "するための／するべき", "doing": "している／すること", "early": "早く／早い", "earlier": "より早く", "earliest": "最も早く", "soon": "すぐに", "poor": "貧しい／かわいそうな", "dark": "暗い", "bad": "悪い", "busy": "忙しい", "lucky": "運がよい", "shy": "内気な／恥ずかしがりの", "honest": "正直な", "believe": "信じる", "spend": "（時間・お金を）使う／過ごす", "trust": "信頼する", "when": "いつ／〜するとき", "while": "〜している間", "between": "〜の間（2つの間）", "activities": "活動", "hobbies": "趣味", "companies": "会社", "subjects": "教科／話題", "take": "取る／連れて行く", "go": "行く", "put": "置く", "turn": "回す／向きを変える（turn off で「消す」）", "you": "あなた（主格・目的格）", "your": "あなたの", "yours": "あなたのもの", "yourself": "あなた自身", "minute": "分", "goal": "目標／ゴール", "stand": "立つ（原形）", "to stand": "立つこと／立つために", "stood": "立った（standの過去形）", "standing": "立っている", "many": "多くの", "well": "上手に／よく", "very": "とても", "much": "とても／ずっと（比較級を強める）", "either": "どちらか／〜もまた（否定文）", "anything": "何か／何でも", "little": "少しの／小さい", "one": "1つ／1人", "received": "受け取った", "climbed": "登った", "collected": "集めた", "decided": "決めた", "useful": "役に立つ／便利な", "careful": "注意深い", "foreign": "外国の", "proud": "誇りに思って", "mayor": "市長", "stranger": "見知らぬ人", "singer": "歌手", "librarian": "司書／図書館員", "become": "〜になる", "pass": "通る／合格する／手渡す", "bring": "持ってくる", "work": "働く／作動する", "off": "離れて／外れて（get off で降りる）", "down": "下へ", "under": "〜の下に", "over": "〜を越えて／上に", "Take": "取る（take off で脱ぐ）", "Carry": "運ぶ", "Build": "建てる", "Lend": "貸す", "to": "〜へ／〜に", "at": "〜で／〜に", "finish": "終える（原形）", "finishing": "終えている／終えること", "finishes": "終える（三人称単数）", "finished": "終えた／終わった", "my": "私の", "our": "私たちの", "we": "私たちは", "me": "私を／私に", "What can I do for you?": "何をいたしましょうか。／ご用件は何ですか。", "Can I help you?": "お手伝いしましょうか。／いらっしゃいませ。", "Do you know why?": "なぜか知っていますか。", "Can you drive me home?": "家まで車で送ってくれますか。", "That’s good.": "それはよかったです。", "Sorry to hear that.": "それはお気の毒です。／それを聞いて残念です。", "No, thank you.": "いいえ、結構です。", "Not at all.": "どういたしまして。／全然〜ない。", "About two miles.": "約2マイルです。", "About five years ago.": "約5年前です。", "About three thousand yen.": "約3000円です。", "About thirty minutes.": "約30分です。", "Can you come and see it?": "来てそれを見てもらえますか。", "Would you like something to eat?": "何か食べたいですか。", "Can you buy me new gloves?": "新しい手袋を買ってくれますか。", "When will you be back?": "いつ戻ってきますか。", "Anything is fine.": "何でもいいです。", "I should go home.": "家に帰ったほうがよいです。", "I’m sorry, but I can’t.": "すみませんが、できません。", "You’re very kind.": "とても親切ですね。", "Where were you going,": "どこへ行くところだったのですか。", "Where did you get it,": "それをどこで手に入れたのですか。", "What color is it,": "それは何色ですか。", "When was your birthday,": "誕生日はいつでしたか。", "No problem.": "問題ありません。／大丈夫です。", "Not really.": "そうでもありません。", "That’s too bad.": "それは残念ですね。", "Yes, please.": "はい、お願いします。", "I’ve already done it.": "私はもうそれをしました。", "I think you know him.": "あなたは彼を知っていると思います。", "I can’t hear you.": "あなたの声が聞こえません。", "I’m afraid he’s not.": "残念ですが、彼はいません／そうではありません。", "What’s the matter?": "どうしたのですか。", "What are you doing?": "何をしているのですか。", "Anything else?": "ほかに何かありますか。", "Can you help me now?": "今、手伝ってくれますか。", "You’re welcome.": "どういたしまして。", "Good luck.": "幸運を祈ります。／がんばって。", "Don’t worry.": "心配しないで。", "I’d love to.": "ぜひそうしたいです。", "that’s not for you.": "それはあなたのものではありません。", "there you are.": "はい、どうぞ。／そこにいますね。", "I’m busy now.": "今、忙しいです。", "I don’t have any.": "私は1つも持っていません。", "I’ll meet you at four.": "4時に会いましょう。", "I walk my dog there.": "そこで犬を散歩させます。", "I won’t go there again.": "もうそこには行きません。", "I can ask someone.": "だれかに聞くことができます。", "You didn’t want it.": "あなたはそれを欲しがりませんでした。", "You’re not going tonight.": "あなたは今夜行きません。", "I’d really like some steak.": "ステーキがとても食べたいです。", "I’m glad to hear that.": "それを聞いてうれしいです。", "Yes, it’s very cold.": "はい、とても寒いです。", "It’s the blue train.": "青い電車です。", "Sorry, I don’t know.": "すみません、分かりません。", "Turn right at the next corner.": "次の角を右に曲がってください。", "I can’t go today.": "今日は行けません。", "I didn’t know that.": "それは知りませんでした。", "I’ll think about that.": "それについて考えてみます。", "I’m sorry about that.": "それはすみません。／それは残念です。", "You’ll love Hokkaido.": "きっと北海道を気に入りますよ。", "I want to go there again.": "またそこへ行きたいです。", "I’m planning to go to Hokkaido.": "北海道へ行く予定です。", "I’m from Hokkaido.": "私は北海道出身です。", "That sounds exciting.": "それは楽しそうですね。", "It’s very easy.": "とても簡単です。", "It’s ready now.": "もう準備できています。", "Let’s eat at home.": "家で食べましょう。", "I’ll pay.": "私が払います。", "I can’t choose.": "選べません。", "That’s very slow.": "それはとても遅いです。", "Say hello to her for me.": "彼女によろしく伝えてください。", "Just a minute,": "少々お待ちください。", "She’s not here,": "彼女はここにいません。", "I know her,": "私は彼女を知っています。", "Get well soon,": "早くよくなってください。", "Get off the bus,": "バスを降りてください。", "Have a good time,": "楽しんでください。", "Turn up the radio,": "ラジオの音を大きくしてください。", "It’s my bed.": "それは私のベッドです。", "I feel much better.": "ずっと具合がよくなりました。", "I’m sorry I’m late.": "遅れてすみません。", "Will you go there by bus?": "そこへバスで行きますか。", "Can I go with you?": "一緒に行ってもいいですか。", "Shall I take some photos?": "写真を何枚か撮りましょうか。", "Have you ever been there before?": "以前そこへ行ったことがありますか。", "Can I take a message?": "伝言を承りましょうか。", "Please try again.": "もう一度やってみてください。", "Will you call her back?": "彼女に折り返し電話しますか。", "I think I know him, too.": "私も彼を知っていると思います。", "I can do it by myself.": "自分ひとりでできます。", "Take it easy.": "無理しないで。／気楽にね。", "Congratulations.": "おめでとうございます。", "Just a moment, sir.": "少々お待ちください。", "That sounds good.": "それはよさそうですね。", "That’s too expensive.": "それは高すぎます。", "Have fun.": "楽しんでね。", "Never mind.": "気にしないで。／何でもありません。", "Please come again.": "また来てください。", "You go ahead.": "先に行ってください。", "Please help me.": "手伝ってください。", "You can get away.": "逃げることができます。／離れられます。", "Please ask me.": "私に聞いてください。", "Can I borrow yours?": "あなたのものを借りてもいいですか。", "I agree with you.": "あなたに賛成です。", "How much is this?": "これはいくらですか。", "How do you like this one?": "こちらはいかがですか。", "It’s just 2,000 yen.": "たった2000円です。", "It’s in your room.": "あなたの部屋にあります。", "Start cleaning it right away.": "今すぐ掃除を始めなさい。", "See you there.": "そこで会いましょう。", "You can’t do it.": "あなたにはできません。", "You can’t miss it.": "見逃すはずがありません。／すぐ分かります。", "I like it, too.": "私もそれが好きです。", "It’s for you.": "あなた宛てです。／あなたのためのものです。", "I’m not sure.": "よく分かりません。／確かではありません。", "I’ll lend you mine.": "私のものを貸します。", "I’m afraid you can’t.": "残念ですが、できません。", "I hope it gets warm.": "暖かくなるといいですね。", "I think so.": "そう思います。", "I’m learning a lot.": "たくさん学んでいます。", "It’s over there.": "あそこにあります。", "I’ll go there by train.": "そこへ電車で行きます。", "That would be great.": "それはいいですね。／ぜひそうしましょう。", "Please give it to me tomorrow.": "明日それを私に提出してください。", "I can show you how.": "やり方を教えることができます。", "The homework is ready.": "宿題はできています。", "I went to the doctor.": "医者に行きました。", "I’ll have one.": "1ついただきます。", "Just do your best.": "とにかくベストを尽くして。", "You don’t like studying.": "あなたは勉強が好きではありません。", "It starts soon.": "もうすぐ始まります。", "How’s the weather?": "天気はどうですか。", "How did you go there?": "どうやってそこへ行きましたか。", "What happened?": "何があったのですか。", "What’s the date today?": "今日は何日ですか。", "Is the restaurant open?": "そのレストランは開いていますか。", "Are you ready?": "準備はできていますか。", "Can I have some tea instead?": "代わりに紅茶をいただけますか。", "I don’t have any,": "私は1つも持っていませんが、", "It’s tomorrow,": "それは明日です、", "I had spaghetti,": "スパゲッティを食べました、", "Thank you for inviting me,": "招待してくれてありがとうございます、", "Let’s go together some day.": "いつか一緒に行きましょう。", "It’s time to go.": "行く時間です。", "I’ll see you there.": "そこで会いましょう。", "Maybe some other time.": "また別の機会に。", "Let me see.": "ええと／見せてください。", "I’ll get it.": "私が取ります。／私が出ます。", "Same to you.": "あなたもね。／あなたにも同じく。", "I don’t know yet.": "まだ分かりません。", "Of course, I am.": "もちろん、そうです。", "You missed it.": "あなたはそれを見逃しました。", "That’s OK.": "大丈夫です。"};
 
 const CHOICE_MEANINGS_G4 = {"minutes": "分（時間）", "letters": "手紙／文字", "faces": "顔", "languages": "言語", "invite": "招待する", "become": "〜になる", "buy": "買う", "stop": "止める／止まる", "popular": "人気のある", "heavy": "重い", "kind": "親切な／種類", "careful": "注意深い", "size": "大きさ", "shop": "店", "sign": "標識／合図", "sky": "空", "ground": "地面／運動場", "gate": "門", "future": "未来／将来", "moment": "瞬間", "Hear": "聞く", "Ride": "乗る", "Close": "閉じる", "Take": "取る（take a showerでシャワーを浴びる）", "like": "好き／〜のような", "clean": "きれいな／掃除する", "find": "見つける", "leave": "出発する／去る", "began": "始めた", "made": "作った（make friendsで友達を作る）", "climbed": "登った", "held": "持った／開催した", "is": "〜です（be動詞）", "be": "〜である（原形）", "are": "〜です（複数）", "was": "〜でした", "What": "何", "How": "どのように／どのくらい", "Why": "なぜ", "Where": "どこ", "Say": "言う", "Cut": "切る", "Put": "置く", "Find": "見つける", "weather": "天気", "store": "店", "present": "贈り物／現在", "map": "地図", "away": "離れて", "ago": "〜前", "hard": "一生懸命に／難しい", "soon": "すぐに", "Up": "上へ", "Among": "〜の中で", "After": "〜の後", "Down": "下へ", "speak": "話す", "tell": "伝える／教える", "drive": "運転する", "say": "言う", "take": "取る", "send": "送る", "have": "持つ／過ごす", "answer": "答える", "worry": "心配する", "ask": "尋ねる", "think": "思う／考える", "draw": "描く", "knows": "知っている", "stays": "滞在する", "watches": "見る", "looks": "見える／〜に見える", "eating": "食べること", "eat": "食べる", "eats": "食べる（三単現）", "ate": "食べた", "well": "上手に／よく", "much": "とても／たくさん", "best": "最もよい", "better": "よりよい", "son": "息子", "uncle": "おじ", "brother": "兄弟", "daughter": "娘", "hear": "聞こえる／聞く", "write": "書く", "travel": "旅行する", "special": "特別な", "deep": "深い", "late": "遅い／遅れて", "under": "〜の下に", "after": "〜の後に", "of": "〜の", "across": "〜を横切って／向こう側に", "fun": "楽しいこと", "long": "長い", "good": "よい／上手な", "cheap": "安い", "plan": "計画", "problem": "問題", "radio": "ラジオ", "shoulder": "肩", "off": "離れて／消えて", "in": "中に", "down": "下へ", "do": "する", "wash": "洗う", "get": "得る／着く", "make": "作る", "her": "彼女の／彼女を", "she": "彼女は", "his": "彼の", "hers": "彼女のもの", "did": "した", "to do": "するべき／するための", "does": "する（三単現）", "library": "図書館", "country": "国", "festival": "祭り", "fruit": "果物", "finished": "終えた", "helped": "助けた", "used": "使った", "arrived": "到着した", "wrong": "間違った", "hungry": "空腹の", "cold": "寒い／冷たい", "quiet": "静かな", "jobs": "仕事", "tickets": "切符／チケット", "places": "場所", "contests": "コンテスト", "show": "見せる", "hope": "望む", "wear": "身につける", "help": "助ける", "to": "〜へ", "on": "〜の上に", "for": "〜を求めて／〜のために", "wait": "待つ", "check": "確認する", "give": "与える", "wakes": "目を覚ます", "takes": "取る", "works": "働く", "tries": "試す", "more": "より多く／more + 形容詞で比較級", "most": "最も多く", "Do": "〜しますか", "Did": "〜しましたか", "Are": "〜ですか", "Were": "〜でしたか"};
@@ -774,6 +889,9 @@ function hideStudyAreas(){
   $('vocabPanel').classList.add('hidden');
   $('writingPanel').classList.add('hidden');
   $('speakingPanel').classList.add('hidden');
+  $('reorderPanel').classList.add('hidden');
+  $('readingPanel').classList.add('hidden');
+  $('listeningPanel').classList.add('hidden');
   $('quizCard').classList.add('hidden');
   $('resultCard').classList.remove('show');
   $('bottomNav').classList.remove('active');
@@ -812,15 +930,196 @@ function startDailyWrong(){
 
 function updateLevelUI(){
   $('levelSelect').value=CURRENT_LEVEL;
-  const opts=[...$('lessonSelect').options];
-  opts.forEach(o=>{
-    if(o.value==='all'){ o.textContent=CURRENT_LEVEL==='4'?'全40問（4級・短文①〜④）':'全80問（3級・1〜8回）'; o.hidden=false; return; }
-    const n=Number(o.value);
-    o.hidden=(CURRENT_LEVEL==='4' && n>4);
-  });
-  if(CURRENT_LEVEL==='4' && Number($('lessonSelect').value)>4)$('lessonSelect').value='all';
+  $('studyTypeSelect').value=CURRENT_STUDY_TYPE;
+  updateStudyTypeUI();
   updateStats();
   updateDailyUI();
+}
+function updateStudyTypeUI(){
+  const type=CURRENT_STUDY_TYPE;
+  const lesson=$('lessonSelect');
+  const normal = type==='short' || type==='conversation';
+  lesson.classList.toggle('hidden',!normal);
+  ['startBtn','randomBtn','wrongBtn','jumpBtn'].forEach(id=>$(id).classList.toggle('hidden',!normal));
+
+  if(normal){
+    const maxLesson = CURRENT_LEVEL==='4'
+      ? (type==='short'?4:8)
+      : (type==='short'?4:8);
+    const minLesson = type==='conversation'?5:1;
+    [...lesson.options].forEach(o=>{
+      if(o.value==='all'){
+        const count=baseQuestionsForType().length;
+        o.textContent=`全部 ${count}問`;
+        o.hidden=false;
+      }else{
+        const n=Number(o.value);
+        o.hidden = n<minLesson || n>maxLesson;
+      }
+    });
+    if(lesson.value!=='all'){
+      const n=Number(lesson.value);
+      if(n<minLesson || n>maxLesson)lesson.value='all';
+    }
+  }
+}
+
+
+let reorderIndex=0, reorderChosen=[];
+function reorderData(){ return CURRENT_LEVEL==='4'?REORDER_G4:REORDER_G3; }
+function readingData(){ return CURRENT_LEVEL==='4'?READING_G4:READING_G3; }
+function listeningData(){ return CURRENT_LEVEL==='4'?LISTENING_G4:LISTENING_G3; }
+
+function openStudyType(){
+  updateStudyTypeUI();
+  if(CURRENT_STUDY_TYPE==='reorder') openReorder();
+  else if(CURRENT_STUDY_TYPE==='reading') openReading();
+  else if(CURRENT_STUDY_TYPE==='listening') openListening();
+  else {
+    hideStudyAreas();
+    $('quizCard').classList.remove('hidden');
+    $('bottomNav').classList.add('active');
+    start('normal',false);
+  }
+}
+
+function sentenceForReorder(item){
+  const middle=item.order.join(' ');
+  return [item.prefix,middle,item.suffix].filter(Boolean).join(' ').replace(/\s+\?/g,'?').replace(/\s+\./g,'.');
+}
+function openReorder(){
+  hideStudyAreas();
+  $('reorderPanel').classList.remove('hidden');
+  reorderIndex=0; reorderChosen=[];
+  renderReorder();
+  $('reorderPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderReorder(){
+  const data=reorderData();
+  if(!data.length)return;
+  if(reorderIndex>=data.length)reorderIndex=0;
+  const item=data[reorderIndex];
+  reorderChosen=[];
+  $('reorderCounter').textContent=`${reorderIndex+1} / ${data.length}`;
+  $('reorderSource').textContent=CURRENT_LEVEL==='4'?'4級教材 第9〜12回':'追加練習（教材外）';
+  $('reorderJapanese').textContent=item.jp;
+  $('reorderFeedback').className='specialfeedback';
+  $('reorderFeedback').innerHTML='';
+  renderReorderTokens();
+  updateReorderAi();
+}
+function renderReorderTokens(){
+  const item=reorderData()[reorderIndex];
+  const answer=$('reorderAnswer');
+  const chosenWords=reorderChosen.map(i=>item.tokens[i]);
+  const assembled=[item.prefix,...chosenWords,item.suffix].filter(Boolean).join(' ');
+  answer.textContent=assembled || '語句を順番にタップしてください';
+  const box=$('reorderTokens'); box.innerHTML='';
+  item.tokens.forEach((word,i)=>{
+    const b=document.createElement('button');
+    b.className='tokenbtn';
+    b.textContent=word;
+    if(reorderChosen.includes(i)){b.disabled=true;b.classList.add('used');}
+    b.addEventListener('click',()=>{reorderChosen.push(i);renderReorderTokens();});
+    box.appendChild(b);
+  });
+}
+function checkReorder(){
+  const item=reorderData()[reorderIndex];
+  const chosen=reorderChosen.map(i=>item.tokens[i]);
+  const ok=JSON.stringify(chosen)===JSON.stringify(item.order);
+  const fb=$('reorderFeedback');
+  fb.className='specialfeedback show '+(ok?'ok':'ng');
+  fb.innerHTML=(ok?'<strong>○ 正解！</strong>':'<strong>× もう一度確認</strong>')+
+    '<br>正しい英文：<strong>'+escapeHtml(sentenceForReorder(item))+'</strong>'+
+    '<br>ポイント：英語は「主語 → 動詞 → 目的語・補語 → 場所・時」などの基本順序を意識します。';
+  updateReorderAi();
+}
+function updateReorderAi(){
+  const item=reorderData()[reorderIndex];
+  const prompt=[
+    `英検${CURRENT_LEVEL}級レベルの語句整序問題です。`,
+    '日本語：'+item.jp,
+    '正しい英文：'+sentenceForReorder(item),
+    'この語順になる理由を、中学生に塾講師が教えるように、文のかたまりに分けて簡潔に説明してください。'
+  ].join('\n');
+  $('reorderAiBtn').href=aiLookupUrl(prompt);
+}
+
+let readingSetIndex=0, readingQIndex=0, readingAnswered=false;
+function openReading(){
+  hideStudyAreas();
+  $('readingPanel').classList.remove('hidden');
+  readingSetIndex=0;readingQIndex=0;
+  const sel=$('readingSetSelect');sel.innerHTML='';
+  readingData().forEach((r,i)=>{
+    const o=document.createElement('option');o.value=i;o.textContent=r.title;sel.appendChild(o);
+  });
+  renderReading();
+  $('readingPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderReading(){
+  const sets=readingData();
+  if(!sets.length)return;
+  const set=sets[readingSetIndex];
+  const q=set.questions[readingQIndex];
+  $('readingSetSelect').value=String(readingSetIndex);
+  $('readingPassage').textContent=set.passage;
+  $('readingQCounter').textContent=`問題 ${readingQIndex+1} / ${set.questions.length}`;
+  $('readingQuestion').textContent=q.q;
+  $('readingFeedback').className='specialfeedback';
+  $('readingFeedback').innerHTML='';
+  readingAnswered=false;
+  const box=$('readingChoices');box.innerHTML='';
+  q.c.forEach((c,i)=>{
+    const b=document.createElement('button');b.className='choice';b.innerHTML=`<strong>${i+1}.</strong> ${escapeHtml(c)}`;
+    b.addEventListener('click',()=>answerReading(i,b));
+    box.appendChild(b);
+  });
+  $('readingPrevBtn').disabled=readingQIndex===0;
+  $('readingNextBtn').textContent=readingQIndex===set.questions.length-1?'次の長文へ →':'次の問題 →';
+  const prompt=[
+    `英検${CURRENT_LEVEL}級の長文読解です。`,
+    '長文：\n'+set.passage,
+    '\nこの長文を中学生向けに、段落ごとの要点・重要単語・設問を解くときの決め手を日本語で説明してください。'
+  ].join('\n');
+  $('readingAiBtn').href=aiLookupUrl(prompt);
+}
+function answerReading(i,button){
+  if(readingAnswered)return;
+  readingAnswered=true;
+  const set=readingData()[readingSetIndex],q=set.questions[readingQIndex];
+  [...$('readingChoices').querySelectorAll('.choice')].forEach((b,j)=>{
+    b.disabled=true;
+    if(j===q.a)b.classList.add('correct');
+    if(j===i&&j!==q.a)b.classList.add('wrong');
+  });
+  const fb=$('readingFeedback');
+  fb.className='specialfeedback show '+(i===q.a?'ok':'ng');
+  fb.innerHTML=(i===q.a?'<strong>○ 正解！</strong>':'<strong>× ちがいます</strong>')+
+    `<br>正解：${q.a+1}. ${escapeHtml(q.c[q.a])}<br>決め手：${escapeHtml(q.e)}`;
+}
+function nextReading(){
+  const sets=readingData(),set=sets[readingSetIndex];
+  if(readingQIndex<set.questions.length-1)readingQIndex++;
+  else {readingSetIndex=(readingSetIndex+1)%sets.length;readingQIndex=0;}
+  renderReading();
+}
+function prevReading(){if(readingQIndex>0){readingQIndex--;renderReading();}}
+
+function openListening(){
+  hideStudyAreas();
+  $('listeningPanel').classList.remove('hidden');
+  const box=$('listeningList');
+  box.innerHTML=listeningData().map(x=>`
+    <div class="listen-card">
+      <strong>第${x.lesson}回 ${escapeHtml(x.title)}</strong>
+      <div class="listen-links">
+        <a href="${x.audio}" target="_blank" rel="noopener noreferrer">🔊 問題音声を聞く</a>
+        <a href="${x.instruction}" target="_blank" rel="noopener noreferrer">📖 指示文の音声</a>
+      </div>
+    </div>`).join('');
+  $('listeningPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function refreshUserUI(){
@@ -846,7 +1145,7 @@ function updateStats(){
 }
 function scopeQuestions(wrongOnly){
   const v=$('lessonSelect').value;
-  let set=currentQuestions().filter(q=>v==='all'||String(q.lesson)===v);
+  let set=baseQuestionsForType().filter(q=>v==='all'||String(q.lesson)===v);
   if(wrongOnly){
     const ids=new Set(profile().wrongBank);
     set=set.filter(q=>ids.has(q.qid));
@@ -1022,6 +1321,15 @@ function deleteUser(){
 }
 
 
+
+$('reorderUndoBtn').addEventListener('click',()=>{reorderChosen.pop();renderReorderTokens();});
+$('reorderResetBtn').addEventListener('click',()=>{reorderChosen=[];renderReorderTokens();$('reorderFeedback').className='specialfeedback';});
+$('reorderCheckBtn').addEventListener('click',checkReorder);
+$('reorderNextBtn').addEventListener('click',()=>{reorderIndex=(reorderIndex+1)%reorderData().length;renderReorder();});
+$('readingSetSelect').addEventListener('change',e=>{readingSetIndex=Number(e.target.value);readingQIndex=0;renderReading();});
+$('readingPrevBtn').addEventListener('click',prevReading);
+$('readingNextBtn').addEventListener('click',nextReading);
+
 $('openVocabBtn').addEventListener('click',openVocab);
 $('dailyQuizBtn').addEventListener('click',startDailyQuiz);
 $('dailyWrongBtn').addEventListener('click',startDailyWrong);
@@ -1065,12 +1373,25 @@ $('speakingDoneBtn').addEventListener('click',()=>{
   goDailyHome();
 });
 
+$('studyTypeSelect').addEventListener('change',e=>{
+  CURRENT_STUDY_TYPE=e.target.value;
+  localStorage.setItem('english-study-type-v1',CURRENT_STUDY_TYPE);
+  $('lessonSelect').value='all';
+  updateStudyTypeUI();
+  if(CURRENT_STUDY_TYPE==='reorder')openReorder();
+  else if(CURRENT_STUDY_TYPE==='reading')openReading();
+  else if(CURRENT_STUDY_TYPE==='listening')openListening();
+  else start('normal',true);
+});
 $('levelSelect').addEventListener('change',e=>{
   CURRENT_LEVEL=e.target.value;
   localStorage.setItem('english-eiken-level-v1',CURRENT_LEVEL);
   $('lessonSelect').value='all';
   updateLevelUI();
-  goDailyHome();
+  if(CURRENT_STUDY_TYPE==='reorder')openReorder();
+  else if(CURRENT_STUDY_TYPE==='reading')openReading();
+  else if(CURRENT_STUDY_TYPE==='listening')openListening();
+  else start('normal',false);
 });
 $('startBtn').addEventListener('click',()=>start('normal',true));
 $('randomBtn').addEventListener('click',()=>start('random',true));
