@@ -108,6 +108,51 @@ summary::-webkit-details-marker{display:none}
   .question{font-size:18px}
   .card{padding:13px}
 }
+
+/* ===== 英検3級 毎日モード ===== */
+.dailycard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;margin-top:10px}
+.dailyhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.dailytitle{font-size:19px;font-weight:800}
+.dailydate{font-size:12px;color:var(--muted);margin-top:3px}
+.dailyprogress{height:9px;border-radius:999px;background:#e4eaf0;overflow:hidden;margin-top:11px}
+.dailyprogress>div{height:100%;width:0;background:var(--accent);transition:width .2s}
+.dailysummary{font-size:13px;color:var(--muted);margin-top:6px}
+.dailygrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:12px}
+.task{border:1px solid var(--line);border-radius:13px;background:#fafbfc;padding:10px;min-width:0}
+.task.done{background:#f0fdf4;border-color:#86efac}
+.taskname{font-weight:800;font-size:14px}
+.tasktime{font-size:11px;color:var(--muted);margin-top:2px}
+.taskstate{font-size:12px;font-weight:700;margin-top:7px}
+.task button{width:100%;margin-top:8px;min-height:40px;padding:6px 8px;font-size:13px}
+.toolpanel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;margin-top:10px}
+.toolhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tooltitle{font-size:18px;font-weight:800}
+.vocablist{display:grid;gap:8px;margin-top:12px}
+.vocabitem{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fafbfc}
+.vocabword{font-size:18px;font-weight:800}
+.vocabq{font-size:12px;line-height:1.5;color:var(--muted);margin-top:4px;word-break:break-word}
+.vocabactions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.vocabactions a,.vocabactions button{font-size:12px;min-height:38px;padding:6px 9px}
+.promptbox{border:1px solid var(--line);border-radius:13px;background:#fafbfc;padding:13px;margin-top:11px}
+.promptlabel{font-size:12px;color:var(--muted);font-weight:700}
+.prompttext{font-size:18px;font-weight:800;line-height:1.55;margin-top:5px}
+textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);border-radius:12px;padding:11px;font:inherit;font-size:16px;margin-top:10px;resize:vertical}
+.wordcount{font-size:12px;color:var(--muted);margin-top:5px;text-align:right}
+.toolactions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.toolactions a{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:44px;border:1px solid #c7d7ff;border-radius:11px;background:#eef4ff;color:#1d4ed8;font-weight:700;padding:8px 12px}
+.samplebox{display:none;margin-top:10px;padding:11px;border:1px solid var(--line);border-radius:12px;background:#fff7ed;line-height:1.65}
+.samplebox.show{display:block}
+.todaydone{font-weight:800;color:var(--ok)}
+@media(max-width:760px){
+  .dailygrid{grid-template-columns:1fr 1fr}
+  .task:last-child{grid-column:1/-1}
+}
+@media(max-width:420px){
+  .dailygrid{grid-template-columns:1fr}
+  .task:last-child{grid-column:auto}
+  .dailycard,.toolpanel{padding:12px}
+}
+
 </style>
 </head>
 <body>
@@ -118,6 +163,7 @@ summary::-webkit-details-marker{display:none}
       <div class="chips">
         <span class="chip">ユーザー：<strong id="miniUser">学習者1</strong></span>
         <span class="chip">間違い：<strong id="miniWrong">0</strong>問</span>
+        <span class="chip">連続：<strong id="miniStreak">0</strong>日</span>
       </div>
     </div>
 
@@ -162,6 +208,110 @@ summary::-webkit-details-marker{display:none}
     <div class="progress"><div id="progressBar"></div></div>
   </div>
 
+
+  <section id="dailyCard" class="dailycard">
+    <div class="dailyhead">
+      <div>
+        <div class="dailytitle">📅 今日の英検3級学習</div>
+        <div id="dailyDate" class="dailydate"></div>
+      </div>
+      <div><strong id="dailyDoneCount">0 / 5</strong> 完了</div>
+    </div>
+    <div class="dailyprogress"><div id="dailyProgressBar"></div></div>
+    <div id="dailySummary" class="dailysummary">毎日少しずつ、5項目を進めます。</div>
+
+    <div class="dailygrid">
+      <div id="taskVocab" class="task">
+        <div class="taskname">① 単語</div>
+        <div class="tasktime">約5分</div>
+        <div id="taskVocabState" class="taskstate">未完了</div>
+        <button id="openVocabBtn">今日の単語</button>
+      </div>
+      <div id="taskQuiz" class="task">
+        <div class="taskname">② 4択10問</div>
+        <div class="tasktime">約10分</div>
+        <div id="taskQuizState" class="taskstate">未完了</div>
+        <button id="dailyQuizBtn" class="primary">今日の10問</button>
+      </div>
+      <div id="taskWrong" class="task">
+        <div class="taskname">③ 間違い復習</div>
+        <div class="tasktime">約5分</div>
+        <div id="taskWrongState" class="taskstate">未完了</div>
+        <button id="dailyWrongBtn" class="warn">間違いだけ</button>
+      </div>
+      <div id="taskWriting" class="task">
+        <div class="taskname">④ 英作文</div>
+        <div class="tasktime">約5分</div>
+        <div id="taskWritingState" class="taskstate">未完了</div>
+        <button id="openWritingBtn">今日の1問</button>
+      </div>
+      <div id="taskSpeaking" class="task">
+        <div class="taskname">⑤ スピーキング</div>
+        <div class="tasktime">約5分</div>
+        <div id="taskSpeakingState" class="taskstate">未完了</div>
+        <button id="openSpeakingBtn">今日の1問</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="vocabPanel" class="toolpanel hidden">
+    <div class="toolhead">
+      <div>
+        <div class="tooltitle">① 今日の単語</div>
+        <div class="help">「🤖 AIに聞く」を押した語句は、自動でこの単語帳に入ります。</div>
+      </div>
+      <button class="dailyHomeBtn">← 今日の学習</button>
+    </div>
+    <div id="vocabList" class="vocablist"></div>
+    <div class="toolactions">
+      <button id="vocabDoneBtn" class="primary">単語学習を完了</button>
+    </div>
+  </section>
+
+  <section id="writingPanel" class="toolpanel hidden">
+    <div class="toolhead">
+      <div>
+        <div class="tooltitle">④ 今日の英作文</div>
+        <div class="help">まず自分で2〜3文を書いてみましょう。</div>
+      </div>
+      <button class="dailyHomeBtn">← 今日の学習</button>
+    </div>
+    <div class="promptbox">
+      <div class="promptlabel">TODAY'S QUESTION</div>
+      <div id="writingPrompt" class="prompttext"></div>
+    </div>
+    <textarea id="writingAnswer" class="dailyanswer" placeholder="ここに英語で書いてください。"></textarea>
+    <div id="writingWordCount" class="wordcount">0 words</div>
+    <div class="toolactions">
+      <a id="writingAiLink" href="#" target="_blank" rel="noopener noreferrer">🤖 AIに添削してもらう</a>
+      <button id="writingSampleBtn">回答例を見る</button>
+      <button id="writingDoneBtn" class="primary">保存して完了</button>
+    </div>
+    <div id="writingSample" class="samplebox"></div>
+  </section>
+
+  <section id="speakingPanel" class="toolpanel hidden">
+    <div class="toolhead">
+      <div>
+        <div class="tooltitle">⑤ 今日のスピーキング</div>
+        <div class="help">質問を聞いて、声に出して1〜2文で答えます。</div>
+      </div>
+      <button class="dailyHomeBtn">← 今日の学習</button>
+    </div>
+    <div class="promptbox">
+      <div class="promptlabel">TODAY'S QUESTION</div>
+      <div id="speakingPrompt" class="prompttext"></div>
+    </div>
+    <div class="toolactions">
+      <button id="speakQuestionBtn">🔊 質問を読む</button>
+      <button id="speakingSampleBtn">回答例を見る</button>
+      <a id="speakingAiLink" href="#" target="_blank" rel="noopener noreferrer">🤖 AIに答え方を聞く</a>
+      <button id="speakingDoneBtn" class="primary">練習完了</button>
+    </div>
+    <div id="speakingSample" class="samplebox"></div>
+  </section>
+
+
   <section id="quizCard" class="card">
     <div class="quizmeta">
       <div>
@@ -186,13 +336,14 @@ summary::-webkit-details-marker{display:none}
       <button id="retrySessionBtn" class="primary">今回の間違いを再テスト</button>
       <button id="retryBankBtn" class="warn">登録中の間違いだけ</button>
       <button id="againBtn">もう一度</button>
+      <button id="dailyHomeResultBtn">📅 今日の学習へ</button>
     </div>
     <div id="wrongList" class="help"></div>
   </section>
 
   <div class="help">
-    選択肢の意味が分からないときは「🤖 AIに聞く」を押してください。正解を教えず、意味・品詞・例文だけをChatGPTに質問します。<br>
-    回答後は「AIで詳しく解説」から、なぜ正解なのか・他の選択肢がなぜ違うのか・全文訳・覚え方まで質問できます。間違えた問題は自動登録されます。
+    分からない選択肢は「🤖 AIに聞く」で意味を確認できます。その語句は自動で単語帳にも入ります。<br>
+    回答後は「🤖 AIに詳しく聞く」で、問題の決め手・正解理由・他の選択肢・全文訳・覚え方を確認できます。
   </div>
 </div>
 
@@ -206,6 +357,40 @@ summary::-webkit-details-marker{display:none}
 
 <script>
 const ALL_QUESTIONS = [{"q": "Jim had a cold yesterday, but he (     ) fine today.", "c": ["breaks", "pulls", "feels", "means"], "a": 2, "e": "feel fine で「元気だ・具合がよい」。主語が he なので feels。", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 1, "qid": "L01Q01"}, {"q": "A: Jenny, walk (     ) in the museum.\nB: Sorry, Ms. Brown. I’ll be careful.", "c": ["equally", "quietly", "clearly", "brightly"], "a": 1, "e": "博物館では「静かに」歩くので quietly。", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 2, "qid": "L01Q02"}, {"q": "A: The new movie was really good.\nB: I didn’t think so. I don’t like the main actor, so I thought it was (     ).", "c": ["boring", "exciting", "glad", "fun"], "a": 0, "e": "I didn’t think so に続くので「退屈な」boring が合う。", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 3, "qid": "L01Q03"}, {"q": "Susan likes to learn about other (     ). She travels to many countries during her vacations.", "c": ["accidents", "cultures", "prizes", "difficulties"], "a": 1, "e": "多くの国へ行くので learn about other cultures（他の文化を学ぶ）。", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 4, "qid": "L01Q04"}, {"q": "A: Excuse me. May I (     ) your dictionary?\nB: Sure. Here you are.", "c": ["borrow", "mail", "lend", "write"], "a": 0, "e": "May I borrow ...? で「〜を借りてもいいですか」。lend は「貸す」。", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 5, "qid": "L01Q05"}, {"q": "Sarah couldn’t find her phone. She looked everywhere. (     ) last, she found it under her bed.", "c": ["At", "On", "In", "Of"], "a": 0, "e": "at last で「ついに・とうとう」。", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 6, "qid": "L01Q06"}, {"q": "Lucy and Fred talked (     ) the phone for about an hour last night.", "c": ["for", "out", "in", "on"], "a": 3, "e": "on the phone で「電話で」。", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 7, "qid": "L01Q07"}, {"q": "A: This sweater is too big. Can I (     ) on a smaller one?\nB: Sure. Here you are.", "c": ["make", "try", "serve", "push"], "a": 1, "e": "try on で「試着する」。", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 8, "qid": "L01Q08"}, {"q": "The sky is (     ) with clouds this morning, but it will be sunny in the afternoon.", "c": ["cover", "covered", "covers", "covering"], "a": 1, "e": "be covered with ... で「〜でおおわれている」。", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 9, "qid": "L01Q09"}, {"q": "A: Do you have a friend (     ) brother is a soccer player?\nB: No, I don’t.", "c": ["which", "whose", "whom", "who"], "a": 1, "e": "whose brother で「その兄弟が〜である友達」。", "lesson": 1, "lessonTitle": "短文の語句空所補充①", "no": 10, "qid": "L01Q10"}, {"q": "Susan walks in the park for an hour every morning for her (     ).", "c": ["package", "machine", "way", "health"], "a": 3, "e": "for her health で「健康のために」。", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 1, "qid": "L02Q01"}, {"q": "Ted watched TV (     ) his mother told him to go to bed.", "c": ["if", "during", "since", "until"], "a": 3, "e": "until で「〜するまで」。", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 2, "qid": "L02Q02"}, {"q": "A: I (     ) a cup of coffee for you, Jack.\nB: Thank you. That was kind of you.", "c": ["graduated", "worked", "ordered", "shared"], "a": 2, "e": "a cup of coffee を目的語に取れるのは ordered（注文した）。", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 3, "qid": "L02Q03"}, {"q": "I will (     ) my friends to my birthday party next week.", "c": ["grow", "show", "move", "invite"], "a": 3, "e": "invite A to B で「AをBに招待する」。", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 4, "qid": "L02Q04"}, {"q": "There is (     ) time to eat lunch before the movie.", "c": ["able", "sure", "whole", "enough"], "a": 3, "e": "enough time で「十分な時間」。", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 5, "qid": "L02Q05"}, {"q": "A: Do you walk to school, Robert?\nB: No, Tim. It’s too (     ) from my house. I go by bike.", "c": ["heavy", "far", "high", "wrong"], "a": 1, "e": "It’s too far from my house. で「家から遠すぎる」。", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 6, "qid": "L02Q06"}, {"q": "A: Did you have a (     ) to go to the new Italian restaurant?\nB: No. I was busy.", "c": ["chance", "secret", "course", "support"], "a": 0, "e": "have a chance to ... で「〜する機会がある」。", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 7, "qid": "L02Q07"}, {"q": "A: You haven’t eaten anything this morning. Do you want to eat something?\nB: Thank you. I’d like to have a (     ) of bread.", "c": ["bowl", "pair", "slice", "sheet"], "a": 2, "e": "a slice of bread で「パン1枚」。", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 8, "qid": "L02Q08"}, {"q": "A: Let’s play tennis this afternoon, Jane.\nB: Sorry, Dan. I have a lot of things (     ) today.", "c": ["do", "done", "to do", "doing"], "a": 2, "e": "things to do で「やるべきこと」。", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 9, "qid": "L02Q09"}, {"q": "Mark got up (     ) than his mother this morning because he had to do his homework.", "c": ["early", "earlier", "earliest", "soon"], "a": 1, "e": "than があるので比較級 earlier。", "lesson": 2, "lessonTitle": "短文の語句空所補充②", "no": 10, "qid": "L02Q10"}, {"q": "A: Hello. This is Bobby. May I speak to Lucy, please?\nB: I’m afraid you have the (     ) number.", "c": ["poor", "dark", "bad", "wrong"], "a": 3, "e": "wrong number で「番号が違います」。", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 1, "qid": "L03Q01"}, {"q": "A: Keiko, there are a lot of people in the room. I can’t sing in front of so many people.\nB: Don’t be so (     ), Tim. I know you can do it.", "c": ["busy", "lucky", "shy", "honest"], "a": 2, "e": "人前で歌えない→「恥ずかしがらないで」なので shy。", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 2, "qid": "L03Q02"}, {"q": "I go to Nikko with my grandparents and (     ) a week every year.", "c": ["believe", "spend", "trust", "push"], "a": 1, "e": "spend a week で「1週間過ごす」。", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 3, "qid": "L03Q03"}, {"q": "Every year, Helen visits Canada (     ) her winter vacation.", "c": ["when", "while", "during", "between"], "a": 2, "e": "during her winter vacation で「冬休みの間に」。", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 4, "qid": "L03Q04"}, {"q": "Jonathan has club (     ) every Saturday afternoon.", "c": ["activities", "hobbies", "companies", "subjects"], "a": 0, "e": "club activities で「部活動」。", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 5, "qid": "L03Q05"}, {"q": "A: Please (     ) off the TV. The baby is sleeping.\nB: Oh, I’m sorry. I didn’t know.", "c": ["take", "go", "put", "turn off"], "a": 3, "e": "turn off the TV で「テレビを消す」。", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 6, "qid": "L03Q06"}, {"q": "A: Please take a seat and make (     ) at home.\nB: Thank you.", "c": ["you", "your", "yours", "yourself"], "a": 3, "e": "make yourself at home で「どうぞくつろいで」。", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 7, "qid": "L03Q07"}, {"q": "I met Jimmy on the (     ) to school this morning. We talked about next month’s school trip.", "c": ["way", "minute", "pair", "goal"], "a": 0, "e": "on the way to school で「学校へ行く途中で」。", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 8, "qid": "L03Q08"}, {"q": "A: Who is the woman (     ) by the car?\nB: That woman with long hair? She’s our new music teacher, Ms. Young.", "c": ["stand", "to stand", "stood", "standing"], "a": 3, "e": "the woman standing by the car で「車のそばに立っている女性」。", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 9, "qid": "L03Q09"}, {"q": "A: Do you have two cameras?\nB: Yes. This new camera is (     ) bigger than the other.", "c": ["many", "well", "very", "much"], "a": 3, "e": "much bigger で「ずっと大きい」。比較級を強める much。", "lesson": 3, "lessonTitle": "短文の語句空所補充③", "no": 10, "qid": "L03Q10"}, {"q": "A: Are you looking for (     ) special?\nB: Yes, a computer. I want something light and small.", "c": ["either", "anything", "little", "one"], "a": 1, "e": "疑問文では anything special（何か特別なもの）が自然。", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 1, "qid": "L04Q01"}, {"q": "The baseball player (     ) to go to the U.S. to play in the major leagues.", "c": ["received", "climbed", "collected", "decided"], "a": 3, "e": "decide to ... で「〜することに決める」。", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 2, "qid": "L04Q02"}, {"q": "Many people carry their smartphones everywhere because they are very (     ).", "c": ["useful", "careful", "foreign", "proud"], "a": 0, "e": "スマホは「便利な」ので useful。", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 3, "qid": "L04Q03"}, {"q": "A: Excuse me, can you tell me the way to the city library?\nB: Sorry. I’m a (     ) around here.", "c": ["mayor", "stranger", "singer", "librarian"], "a": 1, "e": "I’m a stranger around here. で「この辺に詳しくないんです」。", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 4, "qid": "L04Q04"}, {"q": "A: Why are you late, Ken?\nB: My alarm clock didn’t (     ) this morning.", "c": ["become", "pass", "bring", "work"], "a": 3, "e": "alarm clock didn’t work で「目覚ましが鳴らなかった／作動しなかった」。", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 5, "qid": "L04Q05"}, {"q": "A: Where do you get (     ) the bus?\nB: At the next bus stop.", "c": ["off", "down", "under", "over"], "a": 0, "e": "get off the bus で「バスを降りる」。", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 6, "qid": "L04Q06"}, {"q": "A: (     ) off your T-shirt, Tom. It’s so dirty.\nB: Yes, Mom. I’ll put it in the washing machine.", "c": ["Take", "Carry", "Build", "Lend"], "a": 0, "e": "take off で「脱ぐ」。", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 7, "qid": "L04Q07"}, {"q": "The town is famous (     ) its beautiful mountains.", "c": ["to", "in", "at", "for"], "a": 3, "e": "be famous for ... で「〜で有名だ」。", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 8, "qid": "L04Q08"}, {"q": "Henry hasn’t (     ) his homework yet, so he can’t play with his brother.", "c": ["finish", "finishing", "finishes", "finished"], "a": 3, "e": "hasn’t finished ... yet で現在完了の形。", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 9, "qid": "L04Q09"}, {"q": "I love traveling abroad. It makes (     ) happy.", "c": ["my", "our", "we", "me"], "a": 3, "e": "make me happy で「私を幸せにする」。", "lesson": 4, "lessonTitle": "短文の語句空所補充④", "no": 10, "qid": "L04Q10"}, {"q": "Boy: I have to wash my father’s car.\nGirl: (     )\nBoy: Thank you, but I can do it by myself.", "c": ["What can I do for you?", "Can I help you?", "Do you know why?", "Can you drive me home?"], "a": 1, "e": "返答が Thank you なので「手伝おうか？」の Can I help you? が合う。", "lesson": 5, "lessonTitle": "会話文の空所補充①", "no": 1, "qid": "L05Q01"}, {"q": "Boy: How was your drama contest?\nGirl: Our club didn’t win first prize.\nBoy: (     ) I hope you do better next time.", "c": ["That’s good.", "Sorry to hear that.", "No, thank you.", "Not at all."], "a": 1, "e": "残念な結果に対しては Sorry to hear that. が自然。", "lesson": 5, "lessonTitle": "会話文の空所補充①", "no": 2, "qid": "L05Q02"}, {"q": "Man: Excuse me. How long does it take to walk to the park?\nWoman: (     )\nMan: Thank you. Have a good day.", "c": ["About two miles.", "About five years ago.", "About three thousand yen.", "About thirty minutes."], "a": 3, "e": "How long は時間を聞いているので About thirty minutes。", "lesson": 5, "lessonTitle": "会話文の空所補充①", "no": 3, "qid": "L05Q03"}, {"q": "Son: Dad, I have a baseball game next Wednesday. (     )\nFather: Of course. I’ll be there to support you.", "c": ["Can you come and see it?", "Would you like something to eat?", "Can you buy me new gloves?", "When will you be back?"], "a": 0, "e": "父の返答から「見に来てくれる？」が合う。", "lesson": 5, "lessonTitle": "会話文の空所補充①", "no": 4, "qid": "L05Q04"}, {"q": "Woman: What would you like to have for lunch?\nMan: (     )\nWoman: Let’s go to an Italian restaurant, then.", "c": ["Anything is fine.", "I should go home.", "I’m sorry, but I can’t.", "You’re very kind."], "a": 0, "e": "次に店を決めているので「何でもいいよ」が自然。", "lesson": 5, "lessonTitle": "会話文の空所補充①", "no": 5, "qid": "L05Q05"}, {"q": "Girl 1: Your coat is very nice! (     ) Kim?\nGirl 2: My mom bought it for me as a birthday present.", "c": ["Where were you going,", "Where did you get it,", "What color is it,", "When was your birthday,"], "a": 1, "e": "買ってもらったという返答なので Where did you get it? が合う。", "lesson": 5, "lessonTitle": "会話文の空所補充①", "no": 6, "qid": "L05Q06"}, {"q": "Boy: I’m sorry I didn’t call you last night. I went to bed early.\nGirl: (     ) I did, too.", "c": ["No problem.", "Not really.", "That’s too bad.", "Yes, please."], "a": 0, "e": "謝罪に対しては No problem. が自然。", "lesson": 5, "lessonTitle": "会話文の空所補充①", "no": 7, "qid": "L05Q07"}, {"q": "Boy: Hello, this is Bill. Is Yusuke there?\nGirl: (     ) He’s at the park.", "c": ["I’ve already done it.", "I think you know him.", "I can’t hear you.", "I’m afraid he’s not."], "a": 3, "e": "不在を伝える定番表現 I’m afraid he’s not.。", "lesson": 5, "lessonTitle": "会話文の空所補充①", "no": 8, "qid": "L05Q08"}, {"q": "Mother: You don’t look good. (     )\nSon: My throat hurts.\nMother: Maybe you have a cold.", "c": ["What’s the matter?", "What are you doing?", "Anything else?", "Can you help me now?"], "a": 0, "e": "体調が悪そうな相手には What’s the matter?", "lesson": 5, "lessonTitle": "会話文の空所補充①", "no": 9, "qid": "L05Q09"}, {"q": "Boy: Do you want to go on a picnic?\nGirl: (     ) I’ll make some sandwiches.", "c": ["You’re welcome.", "Good luck.", "Don’t worry.", "I’d love to."], "a": 3, "e": "誘いを受ける返答として I’d love to. が自然。", "lesson": 5, "lessonTitle": "会話文の空所補充①", "no": 10, "qid": "L05Q10"}, {"q": "Boy: Dad, can you help me with my homework?\nFather: Sorry, (     ) I can help you in about an hour, though.", "c": ["that’s not for you.", "there you are.", "I’m busy now.", "I don’t have any."], "a": 2, "e": "about an hour で手伝えると言っているので、今は忙しい I’m busy now。", "lesson": 6, "lessonTitle": "会話文の空所補充②", "no": 1, "qid": "L06Q01"}, {"q": "Boy: Do you often go to the park, Alice?\nGirl: Yes. (     )", "c": ["I’ll meet you at four.", "I walk my dog there.", "I won’t go there again.", "I can ask someone."], "a": 1, "e": "よく行く理由・内容として I walk my dog there. が自然。", "lesson": 6, "lessonTitle": "会話文の空所補充②", "no": 2, "qid": "L06Q02"}, {"q": "Mother: What do you want for dinner?\nSon: (     ) I also want ice cream for dessert.", "c": ["You didn’t want it.", "You’re not going tonight.", "I’d really like some steak.", "I’m glad to hear that."], "a": 2, "e": "夕食に何がほしいかなので I’d really like some steak.。", "lesson": 6, "lessonTitle": "会話文の空所補充②", "no": 3, "qid": "L06Q03"}, {"q": "Boy: Excuse me. Can I walk to the station from here?\nGirl: (     ) Please ask someone else.", "c": ["Yes, it’s very cold.", "It’s the blue train.", "Sorry, I don’t know.", "Turn right at the next corner."], "a": 2, "e": "Please ask someone else があるので「すみません、分かりません」。", "lesson": 6, "lessonTitle": "会話文の空所補充②", "no": 4, "qid": "L06Q04"}, {"q": "Boy 1: Can you play any sports?\nBoy 2: Yes. I was on the volleyball team in junior high school.\nBoy 1: Really? (     )", "c": ["I can’t go today.", "I didn’t know that.", "I’ll think about that.", "I’m sorry about that."], "a": 1, "e": "新情報を聞いたときの反応は I didn’t know that.。", "lesson": 6, "lessonTitle": "会話文の空所補充②", "no": 5, "qid": "L06Q05"}, {"q": "Boy: What are you going to do this winter?\nGirl: (     )\nBoy: That’s nice.", "c": ["You’ll love Hokkaido.", "I want to go there again.", "I’m planning to go to Hokkaido.", "I’m from Hokkaido."], "a": 2, "e": "質問への直接の答えになっているのは I’m planning to go to Hokkaido.。", "lesson": 6, "lessonTitle": "会話文の空所補充②", "no": 6, "qid": "L06Q06"}, {"q": "Boy: I’m sorry I’m late. I got up late.\nGirl: (     ) We still have enough time before the game begins.", "c": ["Don’t worry.", "That sounds exciting.", "It’s very easy.", "It’s ready now."], "a": 0, "e": "まだ時間があるので Don’t worry. が合う。", "lesson": 6, "lessonTitle": "会話文の空所補充②", "no": 7, "qid": "L06Q07"}, {"q": "Woman: Have you decided what you are going to eat?\nMan: (     ) The pasta and the pizza both look delicious.\nWoman: Well, hurry up. I’m hungry!", "c": ["Let’s eat at home.", "I’ll pay.", "I can’t choose.", "That’s very slow."], "a": 2, "e": "どちらもおいしそう→「選べない」I can’t choose.。", "lesson": 6, "lessonTitle": "会話文の空所補充②", "no": 8, "qid": "L06Q08"}, {"q": "Man: Hello. This is Mark speaking. May I speak to Jenny?\nWoman: (     ) please.", "c": ["Say hello to her for me.", "Just a minute,", "She’s not here,", "I know her,"], "a": 1, "e": "電話で呼び出すときの定番表現 Just a minute, please.。", "lesson": 6, "lessonTitle": "会話文の空所補充②", "no": 9, "qid": "L06Q09"}, {"q": "Woman: I’d like to hear the weather report. (     ) Erick.\nMan: OK, I will.", "c": ["Get well soon,", "Get off the bus,", "Have a good time,", "Turn up the radio,"], "a": 3, "e": "天気予報を聞きたい→「ラジオの音を大きくして」Turn up the radio.。", "lesson": 6, "lessonTitle": "会話文の空所補充②", "no": 10, "qid": "L06Q10"}, {"q": "Mother: How’s your cold?\nSon: (     ) I think I can go to school today.\nMother: Good.", "c": ["It’s my bed.", "I feel much better.", "I’m sorry I’m late.", "No, thank you."], "a": 1, "e": "学校へ行けそうなので I feel much better. が自然。", "lesson": 7, "lessonTitle": "会話文の空所補充③", "no": 1, "qid": "L07Q01"}, {"q": "Boy: I’m going to Kyoto with my classmates next week.\nGrandmother: That’s nice. (     )\nBoy: No. This is my first visit.", "c": ["Will you go there by bus?", "Can I go with you?", "Shall I take some photos?", "Have you ever been there before?"], "a": 3, "e": "This is my first visit への問いは Have you ever been there before?。", "lesson": 7, "lessonTitle": "会話文の空所補充③", "no": 2, "qid": "L07Q02"}, {"q": "Man: I’d like to talk to Ms. Smith, please.\nWoman: I’m sorry, but she’s out now. (     )\nMan: Yes, please tell her I’m going to be late for the meeting.", "c": ["Can I take a message?", "Please try again.", "Will you call her back?", "I think I know him, too."], "a": 0, "e": "不在なので Can I take a message?（伝言を承りましょうか）。", "lesson": 7, "lessonTitle": "会話文の空所補充③", "no": 3, "qid": "L07Q03"}, {"q": "Waiter: Here’s your sandwich. Would you like anything else?\nCustomer: Could I have a cup of tea, please?\nWaiter: Sure. (     )", "c": ["I can do it by myself.", "Take it easy.", "Congratulations.", "Just a moment, sir."], "a": 3, "e": "店員の返答なので Just a moment, sir. が自然。", "lesson": 7, "lessonTitle": "会話文の空所補充③", "no": 4, "qid": "L07Q04"}, {"q": "Woman 1: Why don’t we go to a movie this weekend?\nWoman 2: (     ) I’ve wanted to see that new comedy.", "c": ["That sounds good.", "That’s too expensive.", "Have fun.", "Never mind."], "a": 0, "e": "映画に賛成しているので That sounds good.。", "lesson": 7, "lessonTitle": "会話文の空所補充③", "no": 5, "qid": "L07Q05"}, {"q": "Girl: Richard, let’s go to the cafeteria.\nBoy: (     ) I need to talk to Mr. Jackson. I’ll meet you there.", "c": ["Please come again.", "You go ahead.", "Please help me.", "You can get away."], "a": 1, "e": "先に行っていて、という意味で You go ahead.。", "lesson": 7, "lessonTitle": "会話文の空所補充③", "no": 6, "qid": "L07Q06"}, {"q": "Sister: Are you ready for your class ski trip?\nBrother: Almost. I can’t find my ski cap. (     )\nSister: Of course.", "c": ["Can I help you?", "Please try again.", "Please ask me.", "Can I borrow yours?"], "a": 3, "e": "Of course への前文は「君のを借りてもいい？」。", "lesson": 7, "lessonTitle": "会話文の空所補充③", "no": 7, "qid": "L07Q07"}, {"q": "Clerk: Can I help you with anything?\nCustomer: Yes. I’m looking for a purse.\nClerk: (     ) It’s on sale.", "c": ["I agree with you.", "How much is this?", "How do you like this one?", "It’s just 2,000 yen."], "a": 2, "e": "店員が商品を勧めているので How do you like this one? が合う。", "lesson": 7, "lessonTitle": "会話文の空所補充③", "no": 8, "qid": "L07Q08"}, {"q": "Mother: Have you cleaned your room yet, Andy?\nSon: No, not yet.\nMother: (     )", "c": ["It’s in your room.", "Start cleaning it right away.", "See you there.", "You can’t do it."], "a": 1, "e": "まだなら「すぐに掃除を始めなさい」が自然。", "lesson": 7, "lessonTitle": "会話文の空所補充③", "no": 9, "qid": "L07Q09"}, {"q": "Boy: Do you know where Mr. Peterson is?\nGirl: (     ) Maybe he’s in the gym.", "c": ["You can’t miss it.", "I like it, too.", "It’s for you.", "I’m not sure."], "a": 3, "e": "Maybe と推測しているので I’m not sure.。", "lesson": 7, "lessonTitle": "会話文の空所補充③", "no": 10, "qid": "L07Q10"}, {"q": "Boy: It’s raining. I left my umbrella at home.\nGirl: Don’t worry. (     ) I have another one.\nBoy: Thank you.", "c": ["I’ll lend you mine.", "I’m afraid you can’t.", "I hope it gets warm.", "I think so."], "a": 0, "e": "I have another one とあるので「私のを貸すよ」I’ll lend you mine.。", "lesson": 8, "lessonTitle": "会話文の空所補充④", "no": 1, "qid": "L08Q01"}, {"q": "Girl: How about going to the art museum next Saturday?\nBoy: (     )\nGirl: I’ll see you at the entrance at two.", "c": ["I’m learning a lot.", "It’s over there.", "I’ll go there by train.", "That would be great."], "a": 3, "e": "提案に賛成しているので That would be great.。", "lesson": 8, "lessonTitle": "会話文の空所補充④", "no": 2, "qid": "L08Q02"}, {"q": "Teacher: Why didn’t you do your homework?\nStudent: I’m sorry. I had a headache and went to bed early last night.\nTeacher: I see. (     )", "c": ["Please give it to me tomorrow.", "I can show you how.", "The homework is ready.", "I went to the doctor."], "a": 0, "e": "事情を聞いたあとの指示として Please give it to me tomorrow. が自然。", "lesson": 8, "lessonTitle": "会話文の空所補充④", "no": 3, "qid": "L08Q03"}, {"q": "Mother: What’s wrong?\nSon: I’m worried about my test tomorrow.\nMother: You’ll be fine. (     )", "c": ["I’ll have one.", "Just do your best.", "You don’t like studying.", "It starts soon."], "a": 1, "e": "心配している相手への励ましは Just do your best.。", "lesson": 8, "lessonTitle": "会話文の空所補充④", "no": 4, "qid": "L08Q04"}, {"q": "Girl: You didn’t come to school yesterday. (     )\nBoy: I had to go to the dentist.", "c": ["How’s the weather?", "How did you go there?", "What happened?", "What’s the date today?"], "a": 2, "e": "欠席理由を聞くので What happened? が合う。", "lesson": 8, "lessonTitle": "会話文の空所補充④", "no": 5, "qid": "L08Q05"}, {"q": "Waiter: Would you like some coffee?\nCustomer: No, thank you. (     )\nWaiter: Sure. I’ll be right back.", "c": ["Is the restaurant open?", "Are you ready?", "Can I have some tea instead?", "Can I help you?"], "a": 2, "e": "コーヒーの代わりに紅茶を頼む流れ。", "lesson": 8, "lessonTitle": "会話文の空所補充④", "no": 6, "qid": "L08Q06"}, {"q": "Man: Why don’t we go to the new Italian restaurant this evening?\nWoman: (     ) but I can’t. I have to go home early today.", "c": ["I don’t have any,", "It’s tomorrow,", "I had spaghetti,", "Thank you for inviting me,"], "a": 3, "e": "誘いを断る前の定番表現は Thank you for inviting me, but ...。", "lesson": 8, "lessonTitle": "会話文の空所補充④", "no": 7, "qid": "L08Q07"}, {"q": "Boy: I went to the science museum yesterday.\nGirl: How was it?\nBoy: Really interesting. (     )", "c": ["Let’s go together some day.", "It’s time to go.", "I’ll see you there.", "Maybe some other time."], "a": 0, "e": "興味深かった→「今度いっしょに行こうよ」が自然。", "lesson": 8, "lessonTitle": "会話文の空所補充④", "no": 8, "qid": "L08Q08"}, {"q": "Boy: Have a nice holiday.\nGirl: (     ) See you next week.", "c": ["Let me see.", "I’ll get it.", "Same to you.", "I don’t know yet."], "a": 2, "e": "Have a nice holiday への返事は Same to you.。", "lesson": 8, "lessonTitle": "会話文の空所補充④", "no": 9, "qid": "L08Q09"}, {"q": "Boy 1: Are you going to the soccer game this weekend?\nBoy 2: (     ) I’m a fan of the Reds.\nBoy 1: Me, too.", "c": ["Of course, I am.", "You missed it.", "That’s OK.", "No, thank you."], "a": 0, "e": "ファンなので「もちろん行くよ」Of course, I am. が合う。", "lesson": 8, "lessonTitle": "会話文の空所補充④", "no": 10, "qid": "L08Q10"}];
+
+const WRITING_PROMPTS = [
+  {q:'What do you like to do after school?',sample:'I like to play tennis after school. I often play with my friends because it is fun.'},
+  {q:'What is your favorite season?',sample:'My favorite season is winter. I like winter because I can ski with my family.'},
+  {q:'What do you usually do on weekends?',sample:'I usually play games and study English on weekends. Sometimes I go shopping with my family.'},
+  {q:'Which do you like better, dogs or cats?',sample:'I like dogs better. They are friendly, and I like walking with dogs.'},
+  {q:'What food do you like the best?',sample:'I like curry and rice the best. My mother makes very good curry at home.'},
+  {q:'Where do you want to visit someday?',sample:'I want to visit Hokkaido someday. I want to see beautiful snow and eat good food there.'},
+  {q:'Do you like reading books?',sample:'Yes, I do. I like reading books because I can learn many new things.'},
+  {q:'What sport do you like?',sample:'I like tennis. I often play it after school, and it is exciting.'},
+  {q:'What do you do to stay healthy?',sample:'I walk every day and try to eat vegetables. I also go to bed early.'},
+  {q:'What subject do you like at school?',sample:'I like English. I enjoy learning new words and speaking English with other people.'},
+  {q:'What do you want to do during your next vacation?',sample:'I want to travel with my family. I also want to take many pictures.'},
+  {q:'Do you like using smartphones for study?',sample:'Yes, I do. I can study English anywhere, and it is easy to review words.'},
+  {q:'What is your favorite place in your town?',sample:'My favorite place is the park near my house. It is quiet, and I can relax there.'},
+  {q:'What do you want to be good at?',sample:'I want to be good at speaking English. I want to talk with people from many countries.'}
+];
+const SPEAKING_PROMPTS = [
+  {q:'What do you usually do after school?',sample:'I usually play tennis after school.'},
+  {q:'What is your favorite food?',sample:'My favorite food is curry and rice.'},
+  {q:'Do you like sports?',sample:'Yes, I do. I like tennis very much.'},
+  {q:'What do you do on Sundays?',sample:'I usually relax at home and study English.'},
+  {q:'Which season do you like the best?',sample:'I like winter the best because I like skiing.'},
+  {q:'How do you go to school?',sample:'I go to school by bike.'},
+  {q:'What did you do yesterday?',sample:'I studied English and watched TV yesterday.'},
+  {q:'What are you going to do this weekend?',sample:'I am going to play tennis with my friends.'},
+  {q:'Do you like reading books?',sample:'Yes, I do. I often read books before bed.'},
+  {q:'What subject do you like?',sample:'I like English because it is interesting.'},
+  {q:'Where do you want to go someday?',sample:'I want to go to Hokkaido someday.'},
+  {q:'What do you usually eat for breakfast?',sample:'I usually eat bread and eggs for breakfast.'},
+  {q:'What do you do when you have free time?',sample:'I listen to music when I have free time.'},
+  {q:'What do you want to do in the future?',sample:'I want to travel to many countries in the future.'}
+];
+
 const APP_KEY = 'english-smart-quiz-users-v2';
 const OLD_USER_KEY = 'english-smart-quiz-users-v1';
 
@@ -274,7 +459,7 @@ function escapeHtml(s){
 }
 
 function blankProfile(){
-  return {correct:0,sessions:0,history:[],wrongBank:[],solved:{}};
+  return {correct:0,sessions:0,history:[],wrongBank:[],solved:{},vocabBank:[],dailyLog:{}};
 }
 function loadStore(){
   let obj = null;
@@ -302,12 +487,227 @@ function ensureProfileOn(s,name){
   if (!Array.isArray(p.wrongBank)) p.wrongBank=[];
   if (!Array.isArray(p.history)) p.history=[];
   if (!p.solved || typeof p.solved !== 'object') p.solved={};
+  if (!Array.isArray(p.vocabBank)) p.vocabBank=[];
+  if (!p.dailyLog || typeof p.dailyLog !== 'object') p.dailyLog={};
   p.correct = Number(p.correct)||0;
   p.sessions = Number(p.sessions)||0;
   return p;
 }
 function saveStore(){ try{localStorage.setItem(APP_KEY,JSON.stringify(store));}catch(e){} }
 function profile(){ return ensureProfileOn(store,store.currentUser); }
+
+
+function localDateKey(d){
+  d=d||new Date();
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function dayIndex(){
+  const d=new Date();
+  return Math.floor(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/86400000);
+}
+function dailyRecord(){
+  const p=profile();
+  const key=localDateKey();
+  if(!p.dailyLog[key]) p.dailyLog[key]={vocab:false,quiz:false,wrong:false,writing:false,speaking:false,writingText:''};
+  const r=p.dailyLog[key];
+  ['vocab','quiz','wrong','writing','speaking'].forEach(k=>{if(typeof r[k]!=='boolean')r[k]=false;});
+  if(typeof r.writingText!=='string')r.writingText='';
+  if(p.wrongBank.length===0) r.wrong=true;
+  return r;
+}
+function dailyComplete(rec){
+  return !!(rec.vocab&&rec.quiz&&rec.wrong&&rec.writing&&rec.speaking);
+}
+function streakCount(){
+  const p=profile();
+  let count=0;
+  const d=new Date();
+  for(let i=0;i<3650;i++){
+    const key=localDateKey(d);
+    const r=p.dailyLog[key];
+    if(r && dailyComplete(r)){count++;d.setDate(d.getDate()-1);}
+    else break;
+  }
+  return count;
+}
+function setDailyTask(task,value){
+  const r=dailyRecord();
+  r[task]=value!==false;
+  saveStore();
+  updateDailyUI();
+}
+function updateDailyUI(){
+  const r=dailyRecord();
+  const tasks=['vocab','quiz','wrong','writing','speaking'];
+  const done=tasks.filter(k=>r[k]).length;
+  $('dailyDate').textContent=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  $('dailyDoneCount').textContent=`${done} / 5`;
+  $('dailyProgressBar').style.width=(done/5*100)+'%';
+  $('dailySummary').innerHTML=done===5?'<span class="todaydone">🎉 今日の学習は完了です！</span>':'毎日少しずつ、5項目を進めます。';
+  const map={vocab:'Vocab',quiz:'Quiz',wrong:'Wrong',writing:'Writing',speaking:'Speaking'};
+  tasks.forEach(k=>{
+    const box=$('task'+map[k]),state=$('task'+map[k]+'State');
+    box.classList.toggle('done',r[k]);
+    state.textContent=r[k]?'✓ 完了':'未完了';
+  });
+  $('miniStreak').textContent=streakCount();
+  if(profile().wrongBank.length===0){
+    $('dailyWrongBtn').textContent='復習なし ✓';
+  }else{
+    $('dailyWrongBtn').textContent=`間違い ${profile().wrongBank.length}問`;
+  }
+}
+function dailyQuestionSet(){
+  const block=((dayIndex()%8)+8)%8;
+  return ALL_QUESTIONS.slice(block*10,block*10+10);
+}
+function recordVocab(item,word){
+  const p=profile();
+  let v=p.vocabBank.find(x=>x.word===word);
+  if(!v){
+    p.vocabBank.push({word:word,qid:item.qid,question:item.q,learned:false,addedAt:new Date().toISOString()});
+  }else{
+    v.learned=false;
+    v.question=item.q;
+    v.qid=item.qid;
+  }
+  saveStore();
+  renderVocab();
+}
+function activeVocab(){
+  const p=profile();
+  const unlearned=p.vocabBank.map((v,i)=>({v,i})).filter(x=>!x.v.learned);
+  if(unlearned.length) return unlearned.slice(0,5);
+  return p.vocabBank.map((v,i)=>({v,i})).slice(-5).reverse();
+}
+function renderVocab(){
+  const box=$('vocabList');
+  if(!box)return;
+  const list=activeVocab();
+  if(!list.length){
+    box.innerHTML='<div class="help">まだ単語帳は空です。4択問題で分からない語句の「🤖 AIに聞く」を押すと、自動でここに登録されます。今日は先に4択問題をやってから戻ってきてもOKです。</div>';
+    return;
+  }
+  box.innerHTML=list.map(({v,i})=>{
+    const prompt=[
+      '中学生の英語学習です。',
+      '語句：'+v.word,
+      '問題文：'+v.question,
+      'この語句の意味、品詞、文中での意味、短い例文、覚え方を塾講師のように分かりやすく説明してください。'
+    ].join('\\n');
+    return `<div class="vocabitem">
+      <div class="vocabword">${escapeHtml(v.word)}</div>
+      <div class="vocabq">${escapeHtml(v.question)}</div>
+      <div class="vocabactions">
+        <a class="aibtn" target="_blank" rel="noopener noreferrer" href="${aiLookupUrl(prompt)}">🤖 AIに聞く</a>
+        <button data-vocab-index="${i}" class="vocabLearnBtn">${v.learned?'復習に戻す':'覚えた'}</button>
+      </div>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('.vocabLearnBtn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const i=Number(btn.dataset.vocabIndex);
+      const p=profile();
+      if(p.vocabBank[i])p.vocabBank[i].learned=!p.vocabBank[i].learned;
+      saveStore();renderVocab();
+    });
+  });
+}
+function writingToday(){
+  return WRITING_PROMPTS[((dayIndex()%WRITING_PROMPTS.length)+WRITING_PROMPTS.length)%WRITING_PROMPTS.length];
+}
+function speakingToday(){
+  return SPEAKING_PROMPTS[((dayIndex()%SPEAKING_PROMPTS.length)+SPEAKING_PROMPTS.length)%SPEAKING_PROMPTS.length];
+}
+function countEnglishWords(s){
+  const t=s.trim();
+  return t?t.split(/\s+/).filter(Boolean).length:0;
+}
+function updateWritingAi(){
+  const item=writingToday();
+  const ans=$('writingAnswer').value.trim();
+  const prompt=[
+    '中学生の英検3級レベルの英作文練習です。',
+    '質問：'+item.q,
+    '私の英文：'+(ans||'（まだ未入力）'),
+    '',
+    'この英文を塾講師のように添削してください。',
+    '1. 良いところ',
+    '2. 直した方がよいところ',
+    '3. 文法や単語の修正',
+    '4. 中学生が使いやすい自然な完成例',
+    'の順で、やさしい日本語で説明してください。'
+  ].join('\\n');
+  $('writingAiLink').href=aiLookupUrl(prompt);
+}
+function openWriting(){
+  hideStudyAreas();
+  $('writingPanel').classList.remove('hidden');
+  const item=writingToday(),r=dailyRecord();
+  $('writingPrompt').textContent=item.q;
+  $('writingAnswer').value=r.writingText||'';
+  $('writingSample').textContent=item.sample;
+  $('writingSample').classList.remove('show');
+  $('writingWordCount').textContent=countEnglishWords($('writingAnswer').value)+' words';
+  updateWritingAi();
+  $('writingPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function openSpeaking(){
+  hideStudyAreas();
+  $('speakingPanel').classList.remove('hidden');
+  const item=speakingToday();
+  $('speakingPrompt').textContent=item.q;
+  $('speakingSample').textContent=item.sample;
+  $('speakingSample').classList.remove('show');
+  const prompt=[
+    '中学生の英検3級レベルのスピーキング練習です。',
+    '質問：'+item.q,
+    'この質問への答え方を、1文の簡単な答え→2文の少し良い答えの順で教えてください。',
+    '使える単語や表現も2〜3個教えてください。'
+  ].join('\\n');
+  $('speakingAiLink').href=aiLookupUrl(prompt);
+  $('speakingPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function hideStudyAreas(){
+  $('dailyCard').classList.add('hidden');
+  $('vocabPanel').classList.add('hidden');
+  $('writingPanel').classList.add('hidden');
+  $('speakingPanel').classList.add('hidden');
+  $('quizCard').classList.add('hidden');
+  $('resultCard').classList.remove('show');
+  $('bottomNav').classList.remove('active');
+}
+function goDailyHome(){
+  hideStudyAreas();
+  $('dailyCard').classList.remove('hidden');
+  updateDailyUI();
+  $('dailyCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function openVocab(){
+  hideStudyAreas();
+  $('vocabPanel').classList.remove('hidden');
+  renderVocab();
+  $('vocabPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function startDailyQuiz(){
+  currentMode='daily';
+  currentSet=dailyQuestionSet();
+  currentIndex=0;answered=false;sessionCorrect=0;sessionWrong=[];lastBaseMode='daily';
+  hideStudyAreas();
+  $('quizCard').classList.remove('hidden');
+  $('bottomNav').classList.add('active');
+  render();
+  $('quizCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function startDailyWrong(){
+  if(profile().wrongBank.length===0){
+    setDailyTask('wrong',true);
+    alert('今日は登録されている間違い問題がありません。復習は完了です。');
+    return;
+  }
+  start('wrong',true);
+}
 
 function refreshUserUI(){
   const sel=$('userSelect');
@@ -328,6 +728,7 @@ function updateStats(){
   $('savedWrongBank').textContent=p.wrongBank.length;
   $('miniWrong').textContent=p.wrongBank.length;
   $('targetCount').textContent=scopeQuestions(false).length+'問';
+  if($('dailyCard')) updateDailyUI();
 }
 function scopeQuestions(wrongOnly){
   const v=$('lessonSelect').value;
@@ -347,6 +748,7 @@ function shuffle(a){
   return x;
 }
 function start(mode,scrollToQuestion){
+  hideStudyAreas();
   let set;
   currentMode=mode;
   if(mode==='wrong'){
@@ -373,7 +775,7 @@ function start(mode,scrollToQuestion){
 function render(){
   const item=currentSet[currentIndex];
   if(!item)return;
-  $('modeBadge').textContent=currentMode==='wrong'?'間違いだけ':currentMode==='random'?'ランダム10問':currentMode==='retry'?'今回の間違い再テスト':'通常問題';
+  $('modeBadge').textContent=currentMode==='daily'?'今日の10問':currentMode==='wrong'?'間違いだけ':currentMode==='random'?'ランダム10問':currentMode==='retry'?'今回の間違い再テスト':'通常問題';
   $('qSub').textContent=`第${item.lesson}回 ${item.lessonTitle} / 問${item.no}`;
   $('countText').textContent=`${currentIndex+1} / ${currentSet.length}`;
   $('question').textContent=item.q;
@@ -395,6 +797,7 @@ function render(){
     ai.href=aiLookupUrl(meaningPrompt(item,c));
     ai.textContent='🤖 AIに聞く';
     ai.setAttribute('aria-label', c+' の意味をAIに聞く');
+    ai.addEventListener('click',()=>recordVocab(item,c));
 
     wrap.appendChild(b);
     wrap.appendChild(ai);
@@ -459,6 +862,8 @@ function finish(){
   const p=profile();
   p.sessions++;
   p.history.push({date:new Date().toISOString(),mode:currentMode,total:currentSet.length,correct:sessionCorrect,wrong:currentSet.length-sessionCorrect});
+  if(currentMode==='daily') dailyRecord().quiz=true;
+  if(currentMode==='wrong') dailyRecord().wrong=true;
   saveStore();updateStats();
   $('quizCard').classList.add('hidden');
   $('resultCard').classList.add('show');
@@ -485,12 +890,12 @@ function addUser(){
   if(!name){alert('ユーザー名を入力してください。');return;}
   if(!store.users.includes(name))store.users.push(name);
   store.currentUser=name;ensureProfileOn(store,name);saveStore();
-  $('newUserName').value='';refreshUserUI();$('settingsPanel').open=false;start('normal',true);
+  $('newUserName').value='';refreshUserUI();$('settingsPanel').open=false;goDailyHome();
 }
 function switchUser(){
   const name=$('userSelect').value;
   if(!name)return;
-  store.currentUser=name;saveStore();refreshUserUI();$('settingsPanel').open=false;start('normal',true);
+  store.currentUser=name;saveStore();refreshUserUI();$('settingsPanel').open=false;goDailyHome();
 }
 function deleteUser(){
   const name=store.currentUser;
@@ -499,8 +904,52 @@ function deleteUser(){
   store.users=store.users.filter(x=>x!==name);
   delete store.profiles[name];
   store.currentUser=store.users[0];
-  saveStore();refreshUserUI();start('normal',false);
+  saveStore();refreshUserUI();goDailyHome();
 }
+
+
+$('openVocabBtn').addEventListener('click',openVocab);
+$('dailyQuizBtn').addEventListener('click',startDailyQuiz);
+$('dailyWrongBtn').addEventListener('click',startDailyWrong);
+$('openWritingBtn').addEventListener('click',openWriting);
+$('openSpeakingBtn').addEventListener('click',openSpeaking);
+document.querySelectorAll('.dailyHomeBtn').forEach(b=>b.addEventListener('click',goDailyHome));
+$('dailyHomeResultBtn').addEventListener('click',goDailyHome);
+
+$('vocabDoneBtn').addEventListener('click',()=>{
+  setDailyTask('vocab',true);
+  goDailyHome();
+});
+$('writingAnswer').addEventListener('input',()=>{
+  const r=dailyRecord();
+  r.writingText=$('writingAnswer').value;
+  saveStore();
+  $('writingWordCount').textContent=countEnglishWords($('writingAnswer').value)+' words';
+  updateWritingAi();
+});
+$('writingDoneBtn').addEventListener('click',()=>{
+  const r=dailyRecord();
+  r.writingText=$('writingAnswer').value;
+  r.writing=true;
+  saveStore();
+  goDailyHome();
+});
+$('writingSampleBtn').addEventListener('click',()=>$('writingSample').classList.toggle('show'));
+
+$('speakQuestionBtn').addEventListener('click',()=>{
+  const item=speakingToday();
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(item.q);
+    u.lang='en-US';u.rate=.86;
+    speechSynthesis.speak(u);
+  }else alert('このブラウザでは読み上げを利用できません。');
+});
+$('speakingSampleBtn').addEventListener('click',()=>$('speakingSample').classList.toggle('show'));
+$('speakingDoneBtn').addEventListener('click',()=>{
+  setDailyTask('speaking',true);
+  goDailyHome();
+});
 
 $('startBtn').addEventListener('click',()=>start('normal',true));
 $('randomBtn').addEventListener('click',()=>start('random',true));
@@ -519,7 +968,8 @@ $('retryBankBtn').addEventListener('click',()=>start('wrong',true));
 $('againBtn').addEventListener('click',()=>start(lastBaseMode==='random'?'random':'normal',true));
 
 refreshUserUI();
-start('normal',false);
+updateDailyUI();
+goDailyHome();
 </script>
 </body>
 </html>
