@@ -224,7 +224,7 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
       <div id="taskVocab" class="task">
         <div class="taskname">① 単語</div>
         <div class="tasktime">約5分</div>
-        <div id="taskVocabState" class="taskstate">未完了</div>
+        <div id="taskVocabState" class="taskstate">今日の5語</div>
         <button id="openVocabBtn">今日の単語</button>
       </div>
       <div id="taskQuiz" class="task">
@@ -258,7 +258,7 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
     <div class="toolhead">
       <div>
         <div class="tooltitle">① 今日の単語</div>
-        <div class="help">「🤖 AIに聞く」を押した語句は、自動でこの単語帳に入ります。</div>
+        <div class="help">毎日5語を表示します。「🤖 AIに聞く」を押した分からない語句も、この単語帳に優先して表示します。</div>
       </div>
       <button class="dailyHomeBtn">← 今日の学習</button>
     </div>
@@ -389,6 +389,50 @@ const SPEAKING_PROMPTS = [
   {q:'What do you usually eat for breakfast?',sample:'I usually eat bread and eggs for breakfast.'},
   {q:'What do you do when you have free time?',sample:'I listen to music when I have free time.'},
   {q:'What do you want to do in the future?',sample:'I want to travel to many countries in the future.'}
+];
+
+
+const DAILY_VOCAB = [
+  {w:'feel',m:'感じる・〜の気分である',ex:'I feel fine today.（私は今日は元気です。）'},
+  {w:'quietly',m:'静かに',ex:'Please speak quietly.（静かに話してください。）'},
+  {w:'boring',m:'退屈な',ex:'The movie was boring.（その映画は退屈でした。）'},
+  {w:'culture',m:'文化',ex:'I want to learn about Japanese culture.（日本文化について学びたいです。）'},
+  {w:'borrow',m:'借りる',ex:'Can I borrow your pen?（あなたのペンを借りてもいいですか。）'},
+  {w:'health',m:'健康',ex:'Walking is good for your health.（歩くことは健康によいです。）'},
+  {w:'until',m:'〜まで',ex:'I studied until ten.（私は10時まで勉強しました。）'},
+  {w:'order',m:'注文する',ex:'I ordered a hamburger.（私はハンバーガーを注文しました。）'},
+  {w:'invite',m:'招待する',ex:'I invited my friend to my party.（友達をパーティーに招待しました。）'},
+  {w:'enough',m:'十分な・十分に',ex:'I have enough time.（私は十分な時間があります。）'},
+  {w:'chance',m:'機会・チャンス',ex:'I had a chance to speak English.（英語を話す機会がありました。）'},
+  {w:'slice',m:'薄切り・一切れ',ex:'I ate a slice of pizza.（ピザを一切れ食べました。）'},
+  {w:'earlier',m:'もっと早く・以前に',ex:'Please come earlier tomorrow.（明日はもっと早く来てください。）'},
+  {w:'wrong',m:'間違っている',ex:'Your answer is wrong.（あなたの答えは間違っています。）'},
+  {w:'shy',m:'恥ずかしがりの・内気な',ex:'She is shy.（彼女は内気です。）'},
+  {w:'spend',m:'（時間・お金）を使う',ex:'I spend two hours studying.（私は勉強に2時間使います。）'},
+  {w:'during',m:'〜の間に',ex:'I slept during the movie.（映画の間に寝ました。）'},
+  {w:'activity',m:'活動',ex:'We enjoy many school activities.（私たちは多くの学校活動を楽しみます。）'},
+  {w:'yourself',m:'あなた自身',ex:'Please do it yourself.（自分でそれをしてください。）'},
+  {w:'anything',m:'何か・何でも',ex:'Do you want anything?（何か欲しいですか。）'},
+  {w:'decide',m:'決める',ex:'I decided to study English.（私は英語を勉強することに決めました。）'},
+  {w:'useful',m:'役に立つ',ex:'This book is useful.（この本は役に立ちます。）'},
+  {w:'stranger',m:'見知らぬ人',ex:'Do not talk to strangers.（見知らぬ人に話しかけないで。）'},
+  {w:'finish',m:'終える',ex:'I finished my homework.（宿題を終えました。）'},
+  {w:'matter',m:'問題・具合',ex:"What's the matter?（どうしたのですか。）"},
+  {w:'afraid',m:'恐れて・残念ながら',ex:"I'm afraid he is busy.（残念ですが彼は忙しいです。）"},
+  {w:'plan',m:'計画する',ex:'I plan to visit Kyoto.（京都を訪れる予定です。）'},
+  {w:'worry',m:'心配する',ex:"Don't worry.（心配しないで。）"},
+  {w:'choose',m:'選ぶ',ex:'Please choose one.（1つ選んでください。）'},
+  {w:'message',m:'伝言・メッセージ',ex:'Can I take a message?（伝言を承りましょうか。）'},
+  {w:'lend',m:'貸す',ex:'I will lend you my book.（あなたに本を貸します。）'},
+  {w:'happen',m:'起こる',ex:'What happened?（何が起こりましたか。）'},
+  {w:'instead',m:'その代わりに',ex:'I had tea instead.（代わりに紅茶を飲みました。）'},
+  {w:'invite',m:'招待する',ex:'Thank you for inviting me.（招待してくれてありがとう。）'},
+  {w:'same',m:'同じ',ex:'We have the same bag.（私たちは同じバッグを持っています。）'},
+  {w:'probably',m:'おそらく',ex:'It will probably rain.（おそらく雨が降るでしょう。）'},
+  {w:'especially',m:'特に',ex:'I like fruit, especially apples.（果物、特にりんごが好きです。）'},
+  {w:'experience',m:'経験',ex:'It was a good experience.（それはよい経験でした。）'},
+  {w:'valuable',m:'貴重な・価値のある',ex:'This is valuable information.（これは貴重な情報です。）'},
+  {w:'generation',m:'世代',ex:'We should tell the next generation.（次の世代に伝えるべきです。）'}
 ];
 
 const APP_KEY = 'english-smart-quiz-users-v2';
@@ -577,31 +621,52 @@ function recordVocab(item,word){
 }
 function activeVocab(){
   const p=profile();
-  const unlearned=p.vocabBank.map((v,i)=>({v,i})).filter(x=>!x.v.learned);
-  if(unlearned.length) return unlearned.slice(0,5);
-  return p.vocabBank.map((v,i)=>({v,i})).slice(-5).reverse();
+  const result=[];
+  const seen=new Set();
+
+  // まず「AIに聞いた」「覚えていない」単語を優先
+  p.vocabBank.map((v,i)=>({v,i}))
+    .filter(x=>!x.v.learned)
+    .slice(0,5)
+    .forEach(x=>{
+      result.push({type:'bank',v:x.v,i:x.i});
+      seen.add(String(x.v.word).toLowerCase());
+    });
+
+  // 足りない分は日替わりの英検3級単語から補充
+  const start=((dayIndex()*5)%DAILY_VOCAB.length+DAILY_VOCAB.length)%DAILY_VOCAB.length;
+  for(let n=0; result.length<5 && n<DAILY_VOCAB.length; n++){
+    const d=DAILY_VOCAB[(start+n)%DAILY_VOCAB.length];
+    if(seen.has(d.w.toLowerCase())) continue;
+    result.push({type:'daily',v:{word:d.w,meaning:d.m,example:d.ex,learned:false}});
+    seen.add(d.w.toLowerCase());
+  }
+  return result;
 }
 function renderVocab(){
   const box=$('vocabList');
   if(!box)return;
   const list=activeVocab();
-  if(!list.length){
-    box.innerHTML='<div class="help">まだ単語帳は空です。4択問題で分からない語句の「🤖 AIに聞く」を押すと、自動でここに登録されます。今日は先に4択問題をやってから戻ってきてもOKです。</div>';
-    return;
-  }
-  box.innerHTML=list.map(({v,i})=>{
+  box.innerHTML=list.map(({type,v,i})=>{
     const prompt=[
       '中学生の英語学習です。',
       '語句：'+v.word,
       '問題文：'+v.question,
       'この語句の意味、品詞、文中での意味、短い例文、覚え方を塾講師のように分かりやすく説明してください。'
     ].join('\\n');
+    const detail = type==='daily'
+      ? `<div style="margin-top:5px;font-size:14px;"><strong>${escapeHtml(v.meaning||'')}</strong></div>
+         <div class="vocabq">${escapeHtml(v.example||'')}</div>`
+      : `<div class="vocabq">${escapeHtml(v.question||'')}</div>`;
+    const learnBtn = type==='bank'
+      ? `<button data-vocab-index="${i}" class="vocabLearnBtn">${v.learned?'復習に戻す':'覚えた'}</button>`
+      : '';
     return `<div class="vocabitem">
       <div class="vocabword">${escapeHtml(v.word)}</div>
-      <div class="vocabq">${escapeHtml(v.question)}</div>
+      ${detail}
       <div class="vocabactions">
         <a class="aibtn" target="_blank" rel="noopener noreferrer" href="${aiLookupUrl(prompt)}">🤖 AIに聞く</a>
-        <button data-vocab-index="${i}" class="vocabLearnBtn">${v.learned?'復習に戻す':'覚えた'}</button>
+        ${learnBtn}
       </div>
     </div>`;
   }).join('');
