@@ -209,6 +209,23 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
 .cram-chip{border:1px solid var(--line);border-radius:10px;background:#fafbfc;padding:8px 10px;font-size:13px}
 @media(max-width:500px){.cram-word{font-size:27px}.cram-status{display:grid;grid-template-columns:1fr 1fr}.cram-status button{min-width:0}}
 
+
+/* ===== v19 単語帳カード：原形・判定・30語グループ ===== */
+.cram-toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.cram-toolbar select{min-width:145px}
+.cram-filter.active{background:#fff7ed;border-color:#fdba74;color:#9a3412;font-weight:700}
+.cram-counts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.cram-count-chip{font-size:12px;border:1px solid var(--line);border-radius:999px;background:#fff;padding:5px 9px}
+.cram-judge{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.cram-judge button{min-height:48px;font-weight:800}
+.cram-correct{background:#f0fdf4;border-color:#86efac;color:#166534}
+.cram-unknown{background:#fff7ed;border-color:#fdba74;color:#9a3412}
+.cram-mark{font-size:12px;font-weight:700;margin-top:8px;min-height:18px}
+@media(max-width:500px){
+ .cram-toolbar{display:grid;grid-template-columns:1fr 1fr}
+ .cram-toolbar select{width:100%;min-width:0;grid-column:1/-1}
+}
+
 </style>
 </head>
 <body>
@@ -350,14 +367,21 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
     <div class="toolhead">
       <div>
         <div class="tooltitle">📚 テスト直前・記憶単語帳カード</div>
-        <div class="help">英単語を見て意味を思い出し、カードをタップすると日本語の意味が出ます。点数や「覚えた／まだ」の判定はありません。</div>
+        <div class="help">単語は辞書の見出し語（原形）で表示します。カードをタップすると日本語の意味が出ます。30語ずつ確認できます。</div>
       </div>
       <button class="dailyHomeBtn">← 今日の学習</button>
     </div>
 
-    <div class="row" style="margin-top:10px">
+    <div class="cram-toolbar">
+      <select id="cramGroupSelect" aria-label="30語グループ"></select>
+      <button id="cramUnknownFilterBtn" class="cram-filter">分からないだけ：OFF</button>
       <button id="cramRestartBtn">最初から</button>
       <button id="cramShuffleBtn">🔀 シャッフル</button>
+    </div>
+    <div class="cram-counts">
+      <span class="cram-count-chip">全体 <strong id="cramTotalCount">0</strong>語</span>
+      <span class="cram-count-chip">合っている <strong id="cramKnownCount">0</strong>語</span>
+      <span class="cram-count-chip">分からない <strong id="cramUnknownCount">0</strong>語</span>
     </div>
 
     <div id="cramEmpty" class="help" style="margin-top:10px"></div>
@@ -367,9 +391,14 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
         <div id="cramCounter" class="cram-meta"></div>
         <div id="cramWord" class="cram-word"></div>
         <div id="cramMeaning" class="cram-meaning"></div>
+        <div id="cramMark" class="cram-mark"></div>
         <div class="cram-tap">カードをタップして意味を表示</div>
       </div>
 
+      <div class="cram-judge">
+        <button id="cramCorrectBtn" class="cram-correct">○ 合っている</button>
+        <button id="cramUnknownBtn" class="cram-unknown">？ 分からない</button>
+      </div>
       <div class="cram-status">
         <button id="cramPrevBtn">← 前へ</button>
         <button id="cramRevealBtn" class="primary">カードをめくる</button>
@@ -711,7 +740,7 @@ function escapeHtml(s){
 }
 
 function blankProfile(){
-  return {correct:0,sessions:0,history:[],wrongBank:[],solved:{},vocabBank:[],dailyLog:{},cramWeak:{}};
+  return {correct:0,sessions:0,history:[],wrongBank:[],solved:{},vocabBank:[],dailyLog:{},cramWeak:{},flashcardStatus:{}};
 }
 function loadStore(){
   let obj = null;
@@ -742,6 +771,7 @@ function ensureProfileOn(s,name){
   if (!Array.isArray(p.vocabBank)) p.vocabBank=[];
   if (!p.dailyLog || typeof p.dailyLog !== 'object') p.dailyLog={};
   if (!p.cramWeak || typeof p.cramWeak !== 'object') p.cramWeak={};
+  if (!p.flashcardStatus || typeof p.flashcardStatus !== 'object') p.flashcardStatus={};
   p.correct = Number(p.correct)||0;
   p.sessions = Number(p.sessions)||0;
   return p;
@@ -1043,109 +1073,128 @@ function updateStudyTypeUI(){
 
 
 
-let cramSet=[],cramIndex=0;
+let cramMaster=[],cramFiltered=[],cramSet=[],cramIndex=0;
+let cramUnknownOnly=false,cramGroupIndex=0;
+const FLASHCARD_GROUP_SIZE=30;
+const BASE_FORM_INFO = {"breaks": ["break", "壊す／壊れる、休憩する"], "pulls": ["pull", "引く"], "feels": ["feel", "感じる／〜の気分である"], "means": ["mean", "意味する"], "covers": ["cover", "おおう"], "covered": ["cover", "おおう"], "covering": ["cover", "おおう"], "graduated": ["graduate", "卒業する"], "worked": ["work", "働く／作動する"], "ordered": ["order", "注文する"], "shared": ["share", "共有する／分け合う"], "done": ["do", "する"], "doing": ["do", "する"], "did": ["do", "する"], "does": ["do", "する"], "climbed": ["climb", "登る"], "collected": ["collect", "集める"], "decided": ["decide", "決める"], "received": ["receive", "受け取る"], "finished": ["finish", "終える"], "finishes": ["finish", "終える"], "finishing": ["finish", "終える"], "stood": ["stand", "立つ"], "standing": ["stand", "立つ"], "arrived": ["arrive", "到着する"], "ate": ["eat", "食べる"], "eating": ["eat", "食べる"], "eats": ["eat", "食べる"], "began": ["begin", "始める／始まる"], "held": ["hold", "持つ／開催する"], "made": ["make", "作る"], "knows": ["know", "知っている"], "looks": ["look", "見る／〜に見える"], "stays": ["stay", "滞在する"], "takes": ["take", "取る／連れて行く"], "tries": ["try", "試す／やってみる"], "wakes": ["wake", "目を覚ます"], "watches": ["watch", "見る"], "works": ["work", "働く／作動する"], "helped": ["help", "助ける"], "used": ["use", "使う"], "is": ["be", "〜である／いる"], "are": ["be", "〜である／いる"], "was": ["be", "〜である／いる"], "were": ["be", "〜である／いる"], "accidents": ["accident", "事故"], "activities": ["activity", "活動"], "companies": ["company", "会社"], "cultures": ["culture", "文化"], "difficulties": ["difficulty", "困難／難しさ"], "hobbies": ["hobby", "趣味"], "prizes": ["prize", "賞／賞品"], "subjects": ["subject", "教科／話題"], "minutes": ["minute", "分（時間）"], "letters": ["letter", "手紙／文字"], "faces": ["face", "顔"], "languages": ["language", "言語"], "contests": ["contest", "コンテスト／競技会"], "jobs": ["job", "仕事"], "places": ["place", "場所"], "tickets": ["ticket", "切符／チケット"], "earlier": ["early", "早い／早く"], "earliest": ["early", "早い／早く"], "better": ["good / well", "よい／上手に・よく"], "best": ["good / well", "よい／上手に・よく"]};
 
+function normalizeFlashcardWord(raw,meaning){
+  const original=String(raw||'').trim();
+  const lower=original.toLowerCase();
+  if(BASE_FORM_INFO[lower]){
+    return {word:BASE_FORM_INFO[lower][0],meaning:BASE_FORM_INFO[lower][1]};
+  }
+  // 単語カードは見出し語として小文字で統一。文・熟語は表現そのものを残す。
+  if(/^[A-Za-z][A-Za-z'’-]*$/.test(original)){
+    return {word:lower,meaning:meaning||''};
+  }
+  return {word:original,meaning:meaning||''};
+}
+function flashcardStatusKey(word){return CURRENT_LEVEL+'|'+String(word).toLowerCase();}
+function cardStatus(word){return profile().flashcardStatus[flashcardStatusKey(word)]||'';}
+function setCardStatus(word,status){
+  profile().flashcardStatus[flashcardStatusKey(word)]=status;
+  saveStore();
+}
 function cramPool(){
   const p=profile(),result=[],seen=new Set();
+  function addCard(raw,meaning,source){
+    const n=normalizeFlashcardWord(raw,meaning);
+    const key=n.word.toLowerCase();
+    if(!n.word||seen.has(key))return;
+    seen.add(key);
+    result.push({word:n.word,meaning:n.meaning||meaning||'意味は「AIに聞く」で確認してください。',source});
+  }
 
-  // 自分で調べた単語を先に入れる
-  (p.vocabBank||[]).forEach(v=>{
-    const k=String(v.word).toLowerCase();
-    if(seen.has(k))return;
-    result.push({
-      word:v.word,
-      meaning:choiceMeaning(v.word)||'意味は「AIに聞く」で確認してください。',
-      source:'自分の単語帳'
-    });
-    seen.add(k);
-  });
+  // 自分の単語帳
+  (p.vocabBank||[]).forEach(v=>addCard(v.word,choiceMeaning(v.word)||'', '自分の単語帳'));
 
-  // その級の問題に出てくる単語・語句
+  // 問題に出る単語・語句
   const qs=CURRENT_LEVEL==='4'?[...QUESTIONS_G4,...CONVERSATION_G4]:QUESTIONS_G3;
-  qs.forEach(q=>q.c.forEach(c=>{
-    const k=String(c).toLowerCase();
-    const meaning=choiceMeaning(c);
-    if(seen.has(k)||!meaning)return;
-    result.push({word:c,meaning:meaning,source:'問題の語句'});
-    seen.add(k);
-  }));
+  qs.forEach(q=>q.c.forEach(c=>addCard(c,choiceMeaning(c)||'', '問題の語句')));
 
-  // 重要単語
-  dailyExtraVocabPool().forEach(v=>{
-    const k=String(v.word).toLowerCase();
-    if(seen.has(k))return;
-    result.push({word:v.word,meaning:v.meaning,source:'重要単語'});
-    seen.add(k);
-  });
-
+  // 級別重要単語
+  dailyExtraVocabPool().forEach(v=>addCard(v.word,v.meaning,'重要単語'));
   return result;
 }
-
 function shuffleObjects(arr){
   const a=[...arr];
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
   return a;
 }
-
-function openCram(){
-  hideStudyAreas();
-  $('cramPanel').classList.remove('hidden');
-  cramSet=cramPool();
+function updateCramCounts(){
+  const all=cramMaster;
+  const known=all.filter(v=>cardStatus(v.word)==='known').length;
+  const unknown=all.filter(v=>cardStatus(v.word)==='unknown').length;
+  $('cramTotalCount').textContent=all.length;
+  $('cramKnownCount').textContent=known;
+  $('cramUnknownCount').textContent=unknown;
+}
+function rebuildCramGroups(resetGroup){
+  cramFiltered=cramUnknownOnly?cramMaster.filter(v=>cardStatus(v.word)==='unknown'):[...cramMaster];
+  if(resetGroup)cramGroupIndex=0;
+  const groups=Math.max(1,Math.ceil(cramFiltered.length/FLASHCARD_GROUP_SIZE));
+  if(cramGroupIndex>=groups)cramGroupIndex=groups-1;
+  const sel=$('cramGroupSelect');sel.innerHTML='';
+  for(let g=0;g<groups;g++){
+    const start=g*FLASHCARD_GROUP_SIZE+1;
+    const end=Math.min((g+1)*FLASHCARD_GROUP_SIZE,cramFiltered.length);
+    const o=document.createElement('option');o.value=String(g);
+    o.textContent=cramFiltered.length?`${start}〜${end}語`:'0語';
+    if(g===cramGroupIndex)o.selected=true;
+    sel.appendChild(o);
+  }
+  const s=cramGroupIndex*FLASHCARD_GROUP_SIZE;
+  cramSet=cramFiltered.slice(s,s+FLASHCARD_GROUP_SIZE);
   cramIndex=0;
-
+  $('cramUnknownFilterBtn').textContent=`分からないだけ：${cramUnknownOnly?'ON':'OFF'}`;
+  $('cramUnknownFilterBtn').classList.toggle('active',cramUnknownOnly);
+  updateCramCounts();
   if(!cramSet.length){
-    $('cramEmpty').textContent='表示できる単語カードがありません。';
+    $('cramEmpty').textContent=cramUnknownOnly?'「分からない」に登録した単語はありません。':'表示できる単語カードがありません。';
     $('cramStudyArea').classList.add('hidden');
   }else{
-    $('cramEmpty').textContent=`英検${CURRENT_LEVEL}級　単語カード ${cramSet.length}枚`;
-    $('cramStudyArea').classList.remove('hidden');
-    renderCramCard();
+    const startNo=s+1,endNo=s+cramSet.length;
+    $('cramEmpty').textContent=`英検${CURRENT_LEVEL}級　${startNo}〜${endNo}語 / 全${cramFiltered.length}語`;
+    $('cramStudyArea').classList.remove('hidden');renderCramCard();
   }
+}
+function openCram(){
+  hideStudyAreas();$('cramPanel').classList.remove('hidden');
+  cramMaster=cramPool();cramUnknownOnly=false;cramGroupIndex=0;
+  rebuildCramGroups(true);
   $('cramPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
-
 function renderCramCard(){
   if(!cramSet.length)return;
   if(cramIndex<0)cramIndex=cramSet.length-1;
   if(cramIndex>=cramSet.length)cramIndex=0;
-
   const v=cramSet[cramIndex];
-  $('cramCounter').textContent=`${cramIndex+1} / ${cramSet.length}`;
+  const groupStart=cramGroupIndex*FLASHCARD_GROUP_SIZE;
+  $('cramCounter').textContent=`グループ ${cramGroupIndex+1}　${groupStart+cramIndex+1} / ${cramFiltered.length}`;
   $('cramWord').textContent=v.word;
   $('cramMeaning').textContent=v.meaning||'意味未登録';
-  $('cramMeaning').classList.remove('show');
-  $('cramRevealBtn').textContent='カードをめくる';
+  $('cramMeaning').classList.remove('show');$('cramRevealBtn').textContent='カードをめくる';
+  const st=cardStatus(v.word);
+  $('cramMark').textContent=st==='known'?'○ 合っている登録済み':st==='unknown'?'？ 分からない登録済み':'';
 }
-
 function revealCram(){
   const show=!$('cramMeaning').classList.contains('show');
-  $('cramMeaning').classList.toggle('show',show);
-  $('cramRevealBtn').textContent=show?'意味を隠す':'カードをめくる';
+  $('cramMeaning').classList.toggle('show',show);$('cramRevealBtn').textContent=show?'意味を隠す':'カードをめくる';
 }
-
-function nextCram(){
-  cramIndex=(cramIndex+1)%cramSet.length;
-  renderCramCard();
+function nextCram(){cramIndex=(cramIndex+1)%cramSet.length;renderCramCard();}
+function prevCram(){cramIndex=(cramIndex-1+cramSet.length)%cramSet.length;renderCramCard();}
+function restartCram(){cramIndex=0;renderCramCard();}
+function shuffleCram(){cramSet=shuffleObjects(cramSet);cramIndex=0;renderCramCard();}
+function markCram(status){
+  if(!cramSet.length)return;
+  const word=cramSet[cramIndex].word;setCardStatus(word,status);updateCramCounts();
+  if(cramUnknownOnly && status==='known'){
+    cramMaster=cramPool();rebuildCramGroups(false);return;
+  }
+  nextCram();
 }
-
-function prevCram(){
-  cramIndex=(cramIndex-1+cramSet.length)%cramSet.length;
-  renderCramCard();
-}
-
-function restartCram(){
-  cramIndex=0;
-  renderCramCard();
-}
-
-function shuffleCram(){
-  cramSet=shuffleObjects(cramSet);
-  cramIndex=0;
-  renderCramCard();
-}
+function toggleUnknownFilter(){cramUnknownOnly=!cramUnknownOnly;rebuildCramGroups(true);}
 
 let reorderIndex=0, reorderChosen=[], reorderDisplayTokens=[];
 function reorderData(){ return CURRENT_LEVEL==='4'?REORDER_G4:REORDER_G3; }
@@ -1537,7 +1586,10 @@ $('cramPrevBtn').addEventListener('click',prevCram);
 $('cramNextBtn').addEventListener('click',nextCram);
 $('cramRestartBtn').addEventListener('click',restartCram);
 $('cramShuffleBtn').addEventListener('click',shuffleCram);
-
+$('cramCorrectBtn').addEventListener('click',()=>markCram('known'));
+$('cramUnknownBtn').addEventListener('click',()=>markCram('unknown'));
+$('cramUnknownFilterBtn').addEventListener('click',toggleUnknownFilter);
+$('cramGroupSelect').addEventListener('change',e=>{cramGroupIndex=Number(e.target.value)||0;rebuildCramGroups(false);});
 $('reorderUndoBtn').addEventListener('click',()=>{reorderChosen.pop();renderReorderTokens();});
 $('reorderResetBtn').addEventListener('click',()=>{reorderChosen=[];renderReorderTokens();$('reorderFeedback').className='specialfeedback';});
 $('reorderShuffleBtn').addEventListener('click',()=>{
