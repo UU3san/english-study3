@@ -226,6 +226,16 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
  .cram-toolbar select{width:100%;min-width:0;grid-column:1/-1}
 }
 
+
+/* ===== v20 今日の学習へ戻る ===== */
+.quiz-home-row{display:flex;justify-content:flex-end;margin-bottom:8px}
+.homebtn{min-height:40px;padding:7px 11px;font-size:13px;border:1px solid #cbd5e1;background:#fff;border-radius:10px}
+.homebtn:hover{background:#f8fafc}
+@media(max-width:520px){
+  .quiz-home-row{justify-content:stretch}
+  .quiz-home-row .homebtn{width:100%}
+}
+
 </style>
 </head>
 <body>
@@ -458,7 +468,10 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
         <span class="specialtitle">語句整序</span>
         <span id="reorderSource" class="sourcebadge"></span>
       </div>
-      <div id="reorderCounter" class="qsub"></div>
+      <div style="display:flex;gap:7px;align-items:center">
+        <div id="reorderCounter" class="qsub"></div>
+        <button class="dailyHomeBtn homebtn">🏠 今日の学習へ</button>
+      </div>
     </div>
     <div id="reorderJapanese" class="reorder-jp"></div>
     <div id="reorderAnswer" class="reorder-answer"></div>
@@ -480,7 +493,10 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
         <span class="specialtitle">長文読解</span>
         <span class="sourcebadge">教材収録問題</span>
       </div>
-      <select id="readingSetSelect"></select>
+      <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+        <select id="readingSetSelect"></select>
+        <button class="dailyHomeBtn homebtn">🏠 今日の学習へ</button>
+      </div>
     </div>
     <div id="readingPassage" class="reading-passage"></div>
     <div id="readingQCounter" class="qsub" style="margin-top:10px"></div>
@@ -500,12 +516,16 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
         <span class="specialtitle">リスニング</span>
         <span class="sourcebadge">教材QR音声</span>
       </div>
+      <button class="dailyHomeBtn homebtn">🏠 今日の学習へ</button>
     </div>
     <div class="help">教材のQRコードと同じ出版社の音声ページを開きます。通信環境が必要です。問題はお手元の教材と一緒に使ってください。</div>
     <div id="listeningList" class="listen-grid"></div>
   </section>
 
   <section id="quizCard" class="card">
+    <div class="quiz-home-row">
+      <button id="quizHomeBtn" class="homebtn">🏠 今日の学習へ</button>
+    </div>
     <div class="quizmeta">
       <div>
         <span id="modeBadge" class="badge">通常問題</span>
@@ -545,6 +565,7 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
     <button id="prevBtn">← 前へ</button>
     <button id="nextBtn" class="primary" disabled>次へ</button>
     <button id="shuffleBtn">ランダム</button>
+    <button id="bottomHomeBtn">🏠 ホーム</button>
   </div>
 </div>
 
@@ -1611,6 +1632,8 @@ $('dailyQuizBtn').addEventListener('click',startDailyQuiz);
 $('dailyWrongBtn').addEventListener('click',startDailyWrong);
 $('openWritingBtn').addEventListener('click',openWriting);
 $('openSpeakingBtn').addEventListener('click',openSpeaking);
+$('quizHomeBtn').addEventListener('click',goDailyHome);
+$('bottomHomeBtn').addEventListener('click',goDailyHome);
 document.querySelectorAll('.dailyHomeBtn').forEach(b=>b.addEventListener('click',goDailyHome));
 $('dailyHomeResultBtn').addEventListener('click',goDailyHome);
 
