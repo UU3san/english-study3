@@ -188,6 +188,25 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
  .listen-grid{grid-template-columns:1fr}
 }
 
+
+/* ===== v17 単語強化 ===== */
+.vocab-top-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.vocab-more-info{font-size:12px;color:var(--muted);margin-top:6px}
+.cram-card{margin-top:12px;border:1px solid var(--line);border-radius:16px;background:#fff;padding:20px 15px;min-height:230px;display:flex;flex-direction:column;justify-content:center;text-align:center}
+.cram-word{font-size:30px;font-weight:850;letter-spacing:.01em;word-break:break-word}
+.cram-meaning{display:none;margin-top:16px;font-size:19px;font-weight:750;line-height:1.6}
+.cram-meaning.show{display:block}
+.cram-example{display:none;margin-top:8px;font-size:14px;line-height:1.6;color:var(--muted);white-space:pre-line}
+.cram-example.show{display:block}
+.cram-meta{font-size:12px;color:var(--muted);margin-top:8px}
+.cram-status{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+.cram-status button{min-width:120px}
+.cram-status .again{background:#fff7ed;border-color:#fdba74;color:#9a3412}
+.cram-status .known{background:#f0fdf4;border-color:#86efac;color:#166534}
+.cram-list{margin-top:12px;display:grid;gap:7px}
+.cram-chip{border:1px solid var(--line);border-radius:10px;background:#fafbfc;padding:8px 10px;font-size:13px}
+@media(max-width:500px){.cram-word{font-size:27px}.cram-status{display:grid;grid-template-columns:1fr 1fr}.cram-status button{min-width:0}}
+
 </style>
 </head>
 <body>
@@ -275,6 +294,8 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
         <div class="tasktime">約5分</div>
         <div id="taskVocabState" class="taskstate">今日の5語</div>
         <button id="openVocabBtn">今日の単語</button>
+        <button id="quickMoreVocabBtn" style="margin-top:6px">＋ もっと単語</button>
+        <button id="openCramBtn" class="warn" style="margin-top:6px">⚡ テスト直前確認</button>
       </div>
       <div id="taskQuiz" class="task">
         <div class="taskname">② 4択10問</div>
@@ -311,9 +332,56 @@ textarea.dailyanswer{width:100%;min-height:130px;border:1px solid var(--line);bo
       </div>
       <button class="dailyHomeBtn">← 今日の学習</button>
     </div>
+    <div class="vocab-top-actions">
+      <button id="moreVocabBtn">＋ 5語追加</button>
+      <button id="resetVocabCountBtn">今日の5語に戻す</button>
+    </div>
+    <div id="vocabMoreInfo" class="vocab-more-info">今日は5語表示します。</div>
     <div id="vocabList" class="vocablist"></div>
     <div class="toolactions">
       <button id="vocabDoneBtn" class="primary">単語学習を完了</button>
+    </div>
+  </section>
+
+
+  <section id="cramPanel" class="toolpanel hidden">
+    <div class="toolhead">
+      <div>
+        <div class="tooltitle">⚡ テスト直前確認単語</div>
+        <div class="help">英単語だけを見て、意味を思い出せるか高速確認します。「まだ」にした単語は保存され、次回も優先して出ます。</div>
+      </div>
+      <button class="dailyHomeBtn">← 今日の学習</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <select id="cramCountSelect">
+        <option value="10">10語</option><option value="20" selected>20語</option><option value="30">30語</option><option value="all">全部</option>
+      </select>
+      <button id="startCramBtn" class="primary">確認スタート</button>
+      <button id="cramWeakOnlyBtn">まだの単語だけ</button>
+      <button id="cramShuffleBtn">🔀 シャッフル</button>
+    </div>
+    <div id="cramEmpty" class="help" style="margin-top:10px"></div>
+    <div id="cramStudyArea" class="hidden">
+      <div class="cram-card">
+        <div id="cramCounter" class="cram-meta"></div>
+        <div id="cramWord" class="cram-word"></div>
+        <div id="cramMeaning" class="cram-meaning"></div>
+        <div id="cramExample" class="cram-example"></div>
+      </div>
+      <div class="cram-status">
+        <button id="cramRevealBtn" class="primary">意味を見る</button>
+        <button id="cramAgainBtn" class="again">まだ</button>
+        <button id="cramKnownBtn" class="known">覚えた</button>
+        <button id="cramNextBtn">次へ →</button>
+      </div>
+    </div>
+    <div id="cramResult" class="hidden">
+      <div class="promptbox"><div class="promptlabel">確認結果</div><div id="cramResultText" class="prompttext"></div></div>
+      <div id="cramWeakList" class="cram-list"></div>
+      <div class="toolactions">
+        <button id="retryCramWeakBtn" class="warn">まだの単語だけもう一度</button>
+        <button id="cramDoneBtn" class="primary">直前確認を終了</button>
+      </div>
     </div>
   </section>
 
@@ -650,7 +718,7 @@ function escapeHtml(s){
 }
 
 function blankProfile(){
-  return {correct:0,sessions:0,history:[],wrongBank:[],solved:{},vocabBank:[],dailyLog:{}};
+  return {correct:0,sessions:0,history:[],wrongBank:[],solved:{},vocabBank:[],dailyLog:{},cramWeak:{}};
 }
 function loadStore(){
   let obj = null;
@@ -680,6 +748,7 @@ function ensureProfileOn(s,name){
   if (!p.solved || typeof p.solved !== 'object') p.solved={};
   if (!Array.isArray(p.vocabBank)) p.vocabBank=[];
   if (!p.dailyLog || typeof p.dailyLog !== 'object') p.dailyLog={};
+  if (!p.cramWeak || typeof p.cramWeak !== 'object') p.cramWeak={};
   p.correct = Number(p.correct)||0;
   p.sessions = Number(p.sessions)||0;
   return p;
@@ -769,34 +838,47 @@ function recordVocab(item,word){
   saveStore();
   renderVocab();
 }
+function vocabCountKey(){
+  return 'eiken-vocab-count-v17|'+store.currentUser+'|g'+CURRENT_LEVEL+'|'+localDateKey();
+}
+function getDailyVocabCount(){
+  const n=Number(localStorage.getItem(vocabCountKey())||5);
+  return Math.max(5,Math.min(30,n||5));
+}
+function setDailyVocabCount(n){
+  n=Math.max(5,Math.min(30,Number(n)||5));
+  localStorage.setItem(vocabCountKey(),String(n));
+  renderVocab();
+}
+function dailyExtraVocabPool(){
+  const result=[]; const seen=new Set();
+  const src=CURRENT_LEVEL==='4'?DAILY_VOCAB_G4:DAILY_VOCAB;
+  src.forEach(v=>{const k=v.w.toLowerCase();if(!seen.has(k)){result.push({word:v.w,meaning:v.m,example:v.ex||''});seen.add(k);}});
+  const qs=CURRENT_LEVEL==='4'?[...QUESTIONS_G4,...CONVERSATION_G4]:QUESTIONS_G3;
+  qs.forEach(q=>q.c.forEach(c=>{const k=String(c).toLowerCase();const meaning=choiceMeaning(c);if(!seen.has(k)&&meaning){result.push({word:c,meaning:meaning,example:q.q});seen.add(k);}}));
+  return result;
+}
 function activeVocab(){
   const p=profile();
-  const result=[];
-  const seen=new Set();
-
-  // まず「AIに聞いた」「覚えていない」単語を優先
-  p.vocabBank.map((v,i)=>({v,i}))
-    .filter(x=>!x.v.learned)
-    .slice(0,5)
-    .forEach(x=>{
-      result.push({type:'bank',v:x.v,i:x.i});
-      seen.add(String(x.v.word).toLowerCase());
-    });
-
-  // 足りない分は日替わりの英検3級単語から補充
-  const vocabSource=CURRENT_LEVEL==='4'?DAILY_VOCAB_G4:DAILY_VOCAB;
-  const start=((dayIndex()*5)%vocabSource.length+vocabSource.length)%vocabSource.length;
-  for(let n=0; result.length<5 && n<vocabSource.length; n++){
-    const d=vocabSource[(start+n)%vocabSource.length];
-    if(seen.has(d.w.toLowerCase())) continue;
-    result.push({type:'daily',v:{word:d.w,meaning:d.m,example:d.ex,learned:false}});
-    seen.add(d.w.toLowerCase());
+  const wanted=getDailyVocabCount();
+  const result=[]; const seen=new Set();
+  p.vocabBank.map((v,i)=>({v,i})).filter(x=>!x.v.learned).slice(0,wanted).forEach(x=>{
+    result.push({type:'bank',v:x.v,i:x.i});seen.add(String(x.v.word).toLowerCase());
+  });
+  const pool=dailyExtraVocabPool();
+  const start=((dayIndex()*5)%pool.length+pool.length)%pool.length;
+  for(let n=0;result.length<wanted&&n<pool.length;n++){
+    const d=pool[(start+n)%pool.length];const k=String(d.word).toLowerCase();if(seen.has(k))continue;
+    result.push({type:'daily',v:{word:d.word,meaning:d.meaning,example:d.example,learned:false}});seen.add(k);
   }
   return result;
 }
 function renderVocab(){
   const box=$('vocabList');
   if(!box)return;
+  const count=getDailyVocabCount();
+  $('vocabMoreInfo').textContent=`今日は最大 ${count}語 表示します。余裕がある日は＋5語ずつ増やせます。`;
+  $('moreVocabBtn').disabled=count>=30;
   const list=activeVocab();
   box.innerHTML=list.map(({type,v,i})=>{
     const prompt=[
@@ -888,6 +970,7 @@ function openSpeaking(){
 function hideStudyAreas(){
   $('dailyCard').classList.add('hidden');
   $('vocabPanel').classList.add('hidden');
+  $('cramPanel').classList.add('hidden');
   $('writingPanel').classList.add('hidden');
   $('speakingPanel').classList.add('hidden');
   $('reorderPanel').classList.add('hidden');
@@ -965,6 +1048,29 @@ function updateStudyTypeUI(){
   }
 }
 
+
+
+let cramSet=[],cramIndex=0,cramWeakSession=[];
+function cramKey(word){return CURRENT_LEVEL+'|'+String(word).toLowerCase();}
+function cramPool(){
+  const p=profile(),result=[],seen=new Set();
+  (p.vocabBank||[]).forEach(v=>{const k=String(v.word).toLowerCase();if(seen.has(k))return;result.push({word:v.word,meaning:choiceMeaning(v.word)||'AIで意味を確認してください。',example:v.question||'',priority:v.learned?2:0,source:'自分の単語帳'});seen.add(k);});
+  const qs=CURRENT_LEVEL==='4'?[...QUESTIONS_G4,...CONVERSATION_G4]:QUESTIONS_G3;
+  qs.forEach(q=>q.c.forEach(c=>{const k=String(c).toLowerCase(),meaning=choiceMeaning(c);if(seen.has(k)||!meaning)return;result.push({word:c,meaning:meaning,example:q.q,priority:1,source:'問題の選択肢'});seen.add(k);}));
+  dailyExtraVocabPool().forEach(v=>{const k=String(v.word).toLowerCase();if(seen.has(k))return;result.push({word:v.word,meaning:v.meaning,example:v.example,priority:3,source:'重要単語'});seen.add(k);});
+  const weak=p.cramWeak||{};result.forEach(v=>{if(weak[cramKey(v.word)])v.priority=-1;});result.sort((a,b)=>a.priority-b.priority);return result;
+}
+function shuffleObjects(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function openCram(){hideStudyAreas();$('cramPanel').classList.remove('hidden');$('cramStudyArea').classList.add('hidden');$('cramResult').classList.add('hidden');const total=cramPool().length;const weakCount=Object.keys(profile().cramWeak||{}).filter(k=>k.startsWith(CURRENT_LEVEL+'|')).length;$('cramEmpty').textContent=`英検${CURRENT_LEVEL}級：確認できる単語 ${total}語 / 「まだ」登録 ${weakCount}語`;$('cramPanel').scrollIntoView({behavior:'smooth',block:'start'});}
+function makeCramSet(weakOnly){let pool=cramPool();if(weakOnly){const weak=profile().cramWeak||{};pool=pool.filter(v=>weak[cramKey(v.word)]);}const cv=$('cramCountSelect').value,count=cv==='all'?pool.length:Number(cv);cramSet=shuffleObjects(pool).slice(0,count);cramIndex=0;cramWeakSession=[];return cramSet.length>0;}
+function startCram(weakOnly){if(!makeCramSet(weakOnly)){$('cramEmpty').textContent=weakOnly?'「まだ」に登録された単語はありません。':'確認できる単語がありません。';return;}$('cramEmpty').textContent='';$('cramResult').classList.add('hidden');$('cramStudyArea').classList.remove('hidden');renderCramCard();}
+function renderCramCard(){if(!cramSet.length)return;if(cramIndex>=cramSet.length){finishCram();return;}const v=cramSet[cramIndex];$('cramCounter').textContent=`${cramIndex+1} / ${cramSet.length}　${v.source}`;$('cramWord').textContent=v.word;$('cramMeaning').textContent=v.meaning||'意味未登録';$('cramExample').textContent=v.example||'';$('cramMeaning').classList.remove('show');$('cramExample').classList.remove('show');$('cramRevealBtn').textContent='意味を見る';}
+function revealCram(){const show=!$('cramMeaning').classList.contains('show');$('cramMeaning').classList.toggle('show',show);if($('cramExample').textContent)$('cramExample').classList.toggle('show',show);$('cramRevealBtn').textContent=show?'意味を隠す':'意味を見る';}
+function markCramWeak(){const v=cramSet[cramIndex],p=profile();p.cramWeak[cramKey(v.word)]={word:v.word,meaning:v.meaning,example:v.example,date:new Date().toISOString()};if(!cramWeakSession.some(x=>x.word===v.word))cramWeakSession.push(v);saveStore();cramIndex++;renderCramCard();}
+function markCramKnown(){const v=cramSet[cramIndex],p=profile();delete p.cramWeak[cramKey(v.word)];saveStore();cramIndex++;renderCramCard();}
+function nextCram(){cramIndex++;renderCramCard();}
+function finishCram(){$('cramStudyArea').classList.add('hidden');$('cramResult').classList.remove('hidden');$('cramResultText').textContent=`${cramSet.length}語確認 / まだ ${cramWeakSession.length}語`;$('cramWeakList').innerHTML=cramWeakSession.length?cramWeakSession.map(v=>`<div class="cram-chip"><strong>${escapeHtml(v.word)}</strong>　${escapeHtml(v.meaning||'')}</div>`).join(''):'<div class="cram-chip">🎉 今回は「まだ」の単語はありません。</div>';$('retryCramWeakBtn').disabled=cramWeakSession.length===0;}
+function retryCramWeakSession(){if(!cramWeakSession.length)return;cramSet=shuffleObjects([...cramWeakSession]);cramIndex=0;cramWeakSession=[];$('cramResult').classList.add('hidden');$('cramStudyArea').classList.remove('hidden');renderCramCard();}
 
 let reorderIndex=0, reorderChosen=[], reorderDisplayTokens=[];
 function reorderData(){ return CURRENT_LEVEL==='4'?REORDER_G4:REORDER_G3; }
@@ -1345,6 +1451,20 @@ function deleteUser(){
 }
 
 
+
+$('moreVocabBtn').addEventListener('click',()=>setDailyVocabCount(getDailyVocabCount()+5));
+$('resetVocabCountBtn').addEventListener('click',()=>setDailyVocabCount(5));
+$('quickMoreVocabBtn').addEventListener('click',()=>{setDailyVocabCount(getDailyVocabCount()+5);openVocab();});
+$('openCramBtn').addEventListener('click',openCram);
+$('startCramBtn').addEventListener('click',()=>startCram(false));
+$('cramWeakOnlyBtn').addEventListener('click',()=>startCram(true));
+$('cramShuffleBtn').addEventListener('click',()=>{if(!cramSet.length){startCram(false);return;}cramSet=shuffleObjects(cramSet);cramIndex=0;renderCramCard();});
+$('cramRevealBtn').addEventListener('click',revealCram);
+$('cramAgainBtn').addEventListener('click',markCramWeak);
+$('cramKnownBtn').addEventListener('click',markCramKnown);
+$('cramNextBtn').addEventListener('click',nextCram);
+$('retryCramWeakBtn').addEventListener('click',retryCramWeakSession);
+$('cramDoneBtn').addEventListener('click',goDailyHome);
 
 $('reorderUndoBtn').addEventListener('click',()=>{reorderChosen.pop();renderReorderTokens();});
 $('reorderResetBtn').addEventListener('click',()=>{reorderChosen=[];renderReorderTokens();$('reorderFeedback').className='specialfeedback';});
